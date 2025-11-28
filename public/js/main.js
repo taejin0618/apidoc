@@ -70,6 +70,35 @@ function setupEventListeners() {
   if (refreshBtn) {
     refreshBtn.addEventListener("click", loadUrls);
   }
+
+  // API 그리드 이벤트 위임 (카드 클릭, 수정 버튼, 빈 상태 추가 버튼)
+  const apiGrid = document.getElementById("apiGrid");
+  if (apiGrid) {
+    apiGrid.addEventListener("click", (e) => {
+      // 빈 상태에서 API 추가 버튼
+      const addBtn = e.target.closest(".empty-state-add-btn");
+      if (addBtn) {
+        openModal("addUrlModal");
+        return;
+      }
+
+      // 수정 버튼 클릭
+      const editBtn = e.target.closest(".edit-card-btn");
+      if (editBtn) {
+        e.stopPropagation();
+        const id = editBtn.dataset.id;
+        if (id) openEditModal(id);
+        return;
+      }
+
+      // API 카드 클릭
+      const card = e.target.closest(".api-card");
+      if (card) {
+        const id = card.dataset.id;
+        if (id) viewApiDetail(id);
+      }
+    });
+  }
 }
 
 // ===== Data Loading =====
@@ -140,7 +169,7 @@ function renderUrlCards(urls) {
         </div>
         <h3 class="empty-state-title">등록된 API가 없습니다</h3>
         <p class="empty-state-text">새 API URL을 추가하여 시작하세요</p>
-        <button class="btn btn-primary" onclick="openModal('addUrlModal')">
+        <button class="btn btn-primary empty-state-add-btn">
           + API 추가
         </button>
       </div>
@@ -152,8 +181,8 @@ function renderUrlCards(urls) {
   const cardsHtml = urls
     .map(
       (url) => `
-    <div class="card api-card" data-id="${url._id}" onclick="viewApiDetail('${url._id}')" style="opacity: 0; animation: fadeIn 0.3s ease forwards; position: relative;">
-      <button class="btn btn-sm btn-icon edit-card-btn" onclick="event.stopPropagation(); openEditModal('${url._id}')" title="수정" style="position: absolute; top: 12px; right: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px;">
+    <div class="card api-card" data-id="${url._id}" style="opacity: 0; animation: fadeIn 0.3s ease forwards; position: relative; cursor: pointer;">
+      <button class="btn btn-sm btn-icon edit-card-btn" data-id="${url._id}" title="수정" style="position: absolute; top: 12px; right: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 14px;">
         <img src="/icons/edit.svg" alt="수정" class="icon" width="16" height="16">
       </button>
       <div class="card-body">
@@ -359,10 +388,15 @@ function showToast(message, type = "info") {
   toast.className = `toast toast-${type}`;
   toast.innerHTML = `
     <span>${escapeHtml(message)}</span>
-    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;margin-left:auto;display:flex;align-items:center;padding:4px;" aria-label="닫기">
+    <button class="toast-close-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;margin-left:auto;display:flex;align-items:center;padding:4px;" aria-label="닫기">
       <img src="/icons/close.svg" alt="닫기" class="icon" width="16" height="16">
     </button>
   `;
+
+  // 닫기 버튼 이벤트 바인딩
+  toast.querySelector(".toast-close-btn").addEventListener("click", () => {
+    toast.remove();
+  });
 
   container.appendChild(toast);
 

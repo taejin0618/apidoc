@@ -29,7 +29,8 @@
       "mcp__figma__get_screenshot",
       "mcp__figma__get_metadata",
       "mcp__figma__get_figjam",
-      "WebFetch(domain:www.figma.com)"
+      "WebFetch(domain:www.figma.com)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

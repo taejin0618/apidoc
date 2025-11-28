@@ -853,8 +853,30 @@
         const versionListContainer = document.getElementById("versionList");
         if (versionListContainer) {
           versionListContainer.addEventListener("click", (e) => {
+            // 상세보기 버튼 클릭
+            const expandBtn = e.target.closest(".expand-btn");
+            if (expandBtn) {
+              e.stopPropagation();
+              const index = expandBtn.dataset.index;
+              if (index !== undefined) {
+                toggleChangeDetails(parseInt(index, 10));
+              }
+              return;
+            }
+
+            // 아코디언 헤더 클릭
+            const accordionHeader = e.target.closest(".change-accordion-header");
+            if (accordionHeader) {
+              const sectionId = accordionHeader.dataset.sectionId;
+              if (sectionId) {
+                toggleAccordionSection(sectionId, accordionHeader);
+              }
+              return;
+            }
+
+            // 버전 아이템 클릭
             const versionItem = e.target.closest(".version-item");
-            if (versionItem && !e.target.closest(".expand-btn")) {
+            if (versionItem) {
               const versionId = versionItem.dataset.versionId;
               if (versionId) {
                 handleVersionClick(apiId, versionId);
@@ -1022,7 +1044,7 @@
             hasChanges
               ? `
             <div class="version-changes-wrapper">
-              <button class="expand-btn" onclick="event.stopPropagation(); toggleChangeDetails(${index})" title="상세 보기">▶</button>
+              <button class="expand-btn" data-index="${index}" title="상세 보기">▶</button>
               <div class="version-changes">
                 ${stats.added > 0 ? `<span class="change-badge added">${stats.added}개 추가</span>` : ""}
                 ${stats.removed > 0 ? `<span class="change-badge removed">${stats.removed}개 삭제</span>` : ""}
@@ -1211,7 +1233,7 @@
             const uniqueId = `accordion-${versionIndex}-${groupIndex}-${type}`;
             html += `
               <div class="change-accordion mini">
-                <div class="change-accordion-header ${type}" onclick="toggleAccordionSection('${uniqueId}', this)">
+                <div class="change-accordion-header ${type}" data-section-id="${uniqueId}">
                   <span class="change-accordion-arrow">▶</span>
                   <span>${type === "added" ? "추가" : type === "removed" ? "삭제" : "수정"}</span>
                   <span class="change-accordion-count">${grouped[type].length}</span>
@@ -1233,7 +1255,7 @@
         const sectionId = `accordion-${versionIndex}-${type}`;
         return `
           <div class="change-accordion">
-            <div class="change-accordion-header ${type}" onclick="toggleAccordionSection('${sectionId}', this)">
+            <div class="change-accordion-header ${type}" data-section-id="${sectionId}">
               <span class="change-accordion-arrow">▶</span>
               <span>${label}</span>
               <span class="change-accordion-count">${items.length}</span>
