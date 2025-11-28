@@ -1,0 +1,30 @@
+# Render 배포 설정 파일
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: api-doc-manager
+    runtime: node
+    plan: free
+
+    # 빌드 설정
+    buildCommand: npm install
+    startCommand: npm start
+
+    # 헬스체크
+    healthCheckPath: /api/health
+
+    # Node.js 버전 지정
+    nodeVersion: "18"
+
+    # 환경변수
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: combined
+      # 아래 변수들은 Render 대시보드에서 직접 설정
+      - key: MONGODB_URI
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

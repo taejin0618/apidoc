@@ -1,0 +1,1588 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API 상세 - API Doc Manager</title>
+
+    <!-- Fonts - Swagger UI Style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Swagger UI -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css"
+    />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/swagger-custom.css" />
+
+    <style>
+      .detail-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: var(--space-lg);
+        min-height: calc(100vh - 120px);
+      }
+
+      /* Sidebar - Swagger UI Info Section Style */
+      .sidebar {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: var(--space-lg);
+        height: fit-content;
+        position: sticky;
+        top: 80px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .api-info {
+        margin-bottom: var(--space-lg);
+        padding-bottom: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .api-info-title {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--space-sm);
+        color: var(--text-primary);
+        font-family: var(--font-family);
+      }
+
+      .api-info-url {
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+        word-break: break-all;
+        margin-bottom: var(--space-md);
+        padding: var(--space-sm);
+        background: var(--bg-primary);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
+      }
+
+      .api-info-meta {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+      }
+
+      /* Version List - Swagger UI Operation Block Style */
+      .version-list {
+        padding-top: var(--space-md);
+      }
+
+      .version-list-title {
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-secondary);
+        margin-bottom: var(--space-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: var(--font-family);
+      }
+
+      .version-item {
+        padding: 12px var(--space-md);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        margin-bottom: 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .version-item:hover {
+        border-color: var(--method-post);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+      }
+
+      .version-item.active {
+        background: var(--bg-primary);
+        border: 2px solid var(--method-post);
+        box-shadow: var(--shadow-md);
+      }
+
+      .version-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .version-id {
+        font-weight: var(--font-weight-semibold);
+        font-family: var(--font-mono);
+        flex-shrink: 0;
+        min-width: fit-content;
+      }
+
+      .version-date {
+        font-size: var(--font-size-xs);
+        opacity: 0.8;
+        font-family: var(--font-family);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+        flex: 1;
+        justify-content: flex-end;
+        min-width: 0;
+      }
+
+      .version-changes {
+        font-size: var(--font-size-xs);
+        margin-top: var(--space-sm);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      /* Change Badges - Swagger UI Method Badge Style */
+      .change-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 4px 10px;
+        border-radius: var(--border-radius-sm);
+        font-size: 12px;
+        font-weight: var(--font-weight-semibold);
+        font-family: var(--font-family);
+        line-height: 1;
+        min-width: 70px;
+      }
+
+      .change-badge.added {
+        background: rgba(73, 204, 144, 0.2);
+        color: var(--method-post);
+      }
+
+      .change-badge.removed {
+        background: rgba(249, 62, 62, 0.2);
+        color: var(--method-delete);
+      }
+
+      .change-badge.modified {
+        background: rgba(252, 161, 48, 0.2);
+        color: var(--method-put);
+      }
+
+      /* 변경 내역 상세 스타일 */
+      .version-changes-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: var(--space-xs);
+      }
+
+      .expand-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 2px 4px;
+        font-size: 10px;
+        color: var(--text-muted);
+        transition: transform 0.2s;
+      }
+
+      .expand-btn.expanded {
+        transform: rotate(90deg);
+      }
+
+      .change-details {
+        display: none;
+        margin-top: var(--space-sm);
+        padding: var(--space-sm);
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: var(--border-radius);
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .change-details.show {
+        display: block;
+      }
+
+      .change-detail-item {
+        padding: 6px 8px;
+        margin-bottom: 4px;
+        border-radius: var(--border-radius-sm);
+        font-size: 11px;
+        border-left: 3px solid;
+        font-family: var(--font-family);
+      }
+
+      .change-detail-item.added {
+        background: rgba(73, 204, 144, 0.1);
+        border-color: var(--method-post);
+      }
+
+      .change-detail-item.removed {
+        background: rgba(249, 62, 62, 0.1);
+        border-color: var(--method-delete);
+      }
+
+      .change-detail-item.modified {
+        background: rgba(252, 161, 48, 0.1);
+        border-color: var(--method-put);
+      }
+
+      .change-detail-path {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        word-break: break-all;
+      }
+
+      .change-detail-category {
+        display: inline-block;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-size: 9px;
+        background: rgba(0, 0, 0, 0.1);
+        margin-left: 4px;
+      }
+
+      .change-detail-desc {
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      /* ===== 아코디언 그룹 스타일 ===== */
+      .change-accordion {
+        margin-bottom: 6px;
+      }
+
+      .change-accordion-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: var(--font-weight-semibold);
+        transition: background 0.15s;
+        user-select: none;
+      }
+
+      .change-accordion-header:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .change-accordion-header.added {
+        color: var(--method-post);
+        background: rgba(73, 204, 144, 0.15);
+        border: 1px solid rgba(73, 204, 144, 0.3);
+      }
+
+      .change-accordion-header.removed {
+        color: var(--method-delete);
+        background: rgba(249, 62, 62, 0.15);
+        border: 1px solid rgba(249, 62, 62, 0.3);
+      }
+
+      .change-accordion-header.modified {
+        color: var(--method-put);
+        background: rgba(252, 161, 48, 0.15);
+        border: 1px solid rgba(252, 161, 48, 0.3);
+      }
+
+      .change-accordion-header.added:hover {
+        background: rgba(73, 204, 144, 0.25);
+      }
+
+      .change-accordion-header.removed:hover {
+        background: rgba(249, 62, 62, 0.25);
+      }
+
+      .change-accordion-header.modified:hover {
+        background: rgba(252, 161, 48, 0.25);
+      }
+
+      .change-accordion-arrow {
+        font-size: 10px;
+        transition: transform 0.2s;
+        display: inline-block;
+      }
+
+      .change-accordion-header.expanded .change-accordion-arrow {
+        transform: rotate(90deg);
+      }
+
+      .change-accordion-count {
+        background: transparent;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-left: auto;
+        border: 1.5px solid currentColor;
+      }
+
+      .change-accordion-body {
+        display: none;
+        padding: 4px 0 4px 12px;
+      }
+
+      .change-accordion-body.show {
+        display: block;
+      }
+
+      /* ===== 변경 항목 카드 스타일 ===== */
+      .change-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 10px 12px;
+        margin-bottom: 6px;
+        font-size: 13px;
+        transition: all 0.15s;
+        cursor: pointer;
+      }
+
+      .change-card:hover {
+        transform: translateX(3px);
+        border-color: var(--text-muted);
+      }
+
+      .change-card:last-child {
+        margin-bottom: 0;
+      }
+
+      .change-card.added {
+        border-left: 3px solid var(--method-post);
+        background: rgba(73, 204, 144, 0.08);
+      }
+
+      .change-card.removed {
+        border-left: 3px solid var(--method-delete);
+        background: rgba(249, 62, 62, 0.08);
+      }
+
+      .change-card.modified {
+        border-left: 3px solid var(--method-put);
+        background: rgba(252, 161, 48, 0.08);
+      }
+
+      /* HTTP 메서드 배지 (변경 카드용) */
+      .change-card-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .method-badge-mini {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        height: 20px;
+        padding: 0 6px;
+        font-size: 10px;
+        font-weight: var(--font-weight-bold);
+        color: #ffffff;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+      }
+
+      .method-badge-mini.get {
+        background: var(--method-get);
+      }
+      .method-badge-mini.post {
+        background: var(--method-post);
+      }
+      .method-badge-mini.put {
+        background: var(--method-put);
+      }
+      .method-badge-mini.delete {
+        background: var(--method-delete);
+      }
+      .method-badge-mini.patch {
+        background: var(--method-patch);
+      }
+      .method-badge-mini.head {
+        background: var(--method-head);
+      }
+      .method-badge-mini.options {
+        background: var(--method-options);
+      }
+
+      /* 카테고리 배지 (메서드 없는 카드용) */
+      .category-badge-mini {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 54px;
+        height: 20px;
+        padding: 0 6px;
+        font-size: 10px;
+        font-weight: var(--font-weight-bold);
+        color: #ffffff;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+      }
+
+      .category-badge-mini.schema {
+        background: #9012fe;
+      }
+      .category-badge-mini.parameter {
+        background: #50e3c2;
+      }
+      .category-badge-mini.requestBody {
+        background: #fca130;
+      }
+      .category-badge-mini.response {
+        background: #61affe;
+      }
+      .category-badge-mini.info {
+        background: #6b7280;
+      }
+      .category-badge-mini.description {
+        background: #8b5cf6;
+      }
+      .category-badge-mini.endpoint {
+        background: #10b981;
+      }
+
+      .change-card-path {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+        display: inline-block;
+        vertical-align: middle;
+        color: var(--text-primary);
+      }
+
+      .change-card:hover .change-card-path {
+        white-space: normal;
+        word-break: break-word;
+        max-width: none;
+        overflow: visible;
+      }
+
+      .change-card-category {
+        display: inline-block;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-size: 9px;
+        background: rgba(97, 175, 254, 0.15);
+        color: var(--method-get);
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+
+      .change-card-desc {
+        margin-top: 4px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+      }
+
+      /* Swagger Container */
+      .swagger-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .swagger-header {
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-secondary);
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+      }
+
+      .swagger-actions {
+        display: flex;
+        gap: var(--space-sm);
+      }
+
+      #swagger-ui {
+        padding: var(--space-md);
+        background: var(--bg-primary) !important;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        margin-bottom: var(--space-md);
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+      }
+
+      .back-link:hover {
+        color: var(--accent-primary);
+      }
+
+      @media (max-width: 1024px) {
+        .detail-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+      }
+
+      /* ===== Swagger UI 하이라이트 효과 ===== */
+      .highlight-operation {
+        animation: highlight-pulse 0.5s ease-in-out 3;
+        position: relative;
+        z-index: 10;
+      }
+
+      @keyframes highlight-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 3px rgba(73, 204, 144, 0.6);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(73, 204, 144, 0.3);
+        }
+      }
+
+      /* ===== 업데이트 배지 ===== */
+      .updated-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        font-size: 9px;
+        background: rgba(252, 161, 48, 0.2);
+        color: var(--method-put);
+        border-radius: 3px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      /* ===== 타임라인 스타일 ===== */
+      .update-timeline {
+        margin-top: 12px;
+        padding-left: 12px;
+        border-left: 2px solid var(--border-color);
+      }
+
+      .update-group {
+        position: relative;
+        padding-bottom: 16px;
+      }
+
+      .update-group:last-child {
+        padding-bottom: 0;
+      }
+
+      .update-group::before {
+        content: "";
+        position: absolute;
+        left: -17px;
+        top: 6px;
+        width: 8px;
+        height: 8px;
+        background: var(--bg-primary);
+        border: 2px solid var(--text-muted);
+        border-radius: 50%;
+      }
+
+      .update-group.first::before {
+        border-color: var(--method-post);
+        background: var(--method-post);
+      }
+
+      .update-group-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+
+      .update-date {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+
+      .update-interval {
+        color: var(--text-muted);
+        font-size: 10px;
+        background: var(--bg-secondary);
+        padding: 2px 6px;
+        border-radius: 10px;
+      }
+
+      .update-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 11px;
+      }
+
+      .update-summary-item {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+
+      .update-summary-item.added {
+        background: rgba(73, 204, 144, 0.15);
+        color: var(--method-post);
+      }
+
+      .update-summary-item.modified {
+        background: rgba(97, 175, 254, 0.15);
+        color: var(--method-get);
+      }
+
+      .update-summary-item.removed {
+        background: rgba(249, 62, 62, 0.15);
+        color: var(--method-delete);
+      }
+
+      .change-group-cards {
+        margin-top: 8px;
+      }
+
+      .change-accordion.mini {
+        margin-bottom: 4px;
+      }
+
+      .change-accordion.mini .change-accordion-header {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+
+      .change-accordion.mini .change-accordion-body {
+        padding: 4px 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <a href="/" class="logo">
+            <div class="logo-icon">
+              <img
+                src="/icons/book.svg"
+                alt="문서"
+                class="icon"
+                width="24"
+                height="24"
+              />
+            </div>
+            <span>API Doc Manager</span>
+          </a>
+          <div class="header-actions">
+            <button
+              class="btn btn-secondary"
+              id="fetchBtn"
+              title="최신 데이터 가져오기"
+            >
+              <img
+                src="/icons/refresh.svg"
+                alt="새로고침"
+                class="icon icon-btn"
+                width="20"
+                height="20"
+              />
+              지금 확인
+            </button>
+            <button class="btn btn-primary" id="compareBtn">
+              <img
+                src="/icons/graph.svg"
+                alt="버전 비교"
+                class="icon"
+                width="16"
+                height="16"
+                style="margin-right: 4px; vertical-align: middle"
+              />
+              버전 비교
+            </button>
+            <button class="btn btn-danger" id="deleteBtn" title="API 문서 삭제">
+              <img
+                src="/icons/trash.svg"
+                alt="삭제"
+                class="icon"
+                width="16"
+                height="16"
+                style="margin-right: 4px; vertical-align: middle"
+              />
+              삭제
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <a href="/" class="back-link">← 목록으로 돌아가기</a>
+
+        <div class="detail-layout">
+          <!-- Sidebar -->
+          <aside class="sidebar">
+            <div class="api-info">
+              <h1 class="api-info-title" id="apiName">로딩 중...</h1>
+              <p class="api-info-url" id="apiUrl"></p>
+              <div class="api-info-meta">
+                <span class="group-badge" id="apiGroup"></span>
+                <span class="status-badge" id="apiStatus"></span>
+                <span id="apiLastFetch" class="api-card-meta-item"></span>
+              </div>
+            </div>
+
+            <div class="version-list">
+              <div class="version-list-title">
+                <span>버전 히스토리</span>
+                <span id="versionCount">0개</span>
+              </div>
+              <div id="versionList">
+                <!-- Version items will be rendered here -->
+              </div>
+            </div>
+          </aside>
+
+          <!-- Swagger UI Container -->
+          <div class="swagger-container">
+            <div class="swagger-header">
+              <div>
+                <strong id="currentVersion">현재 버전: -</strong>
+                <span
+                  id="currentVersionDate"
+                  style="
+                    color: var(--text-muted);
+                    font-size: var(--font-size-sm);
+                    margin-left: var(--space-sm);
+                  "
+                ></span>
+              </div>
+              <div class="swagger-actions">
+                <button class="btn btn-sm btn-secondary" id="downloadJsonBtn">
+                  <img
+                    src="/icons/download.svg"
+                    alt="다운로드"
+                    class="icon"
+                    width="16"
+                    height="16"
+                    style="margin-right: 4px; vertical-align: middle"
+                  />
+                  JSON 다운로드
+                </button>
+              </div>
+            </div>
+            <div id="swagger-ui"></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Toast Container -->
+      <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+    <script src="/js/icon-utils.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script>
+      // ===== Global State =====
+      let currentApiUrl = null;
+      let currentVersions = [];
+      let currentSwaggerJson = null;
+      let selectedVersionId = null;
+
+      // ===== Initialize =====
+      document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const apiId = urlParams.get("id");
+
+        if (!apiId) {
+          window.location.href = "/";
+          return;
+        }
+
+        initPage(apiId);
+      });
+
+      async function initPage(apiId) {
+        setupEventListeners(apiId);
+        await loadApiDetail(apiId);
+        await loadVersions(apiId);
+      }
+
+      // ===== Event Listeners =====
+      function setupEventListeners(apiId) {
+        document
+          .getElementById("fetchBtn")
+          .addEventListener("click", () => handleFetch(apiId));
+        document
+          .getElementById("compareBtn")
+          .addEventListener("click", () => handleCompare(apiId));
+        document
+          .getElementById("downloadJsonBtn")
+          .addEventListener("click", handleDownloadJson);
+        document
+          .getElementById("deleteBtn")
+          .addEventListener("click", () => handleDelete(apiId));
+
+        // 버전 목록 이벤트 위임 (동적으로 생성되는 요소를 위해)
+        const versionListContainer = document.getElementById("versionList");
+        if (versionListContainer) {
+          versionListContainer.addEventListener("click", (e) => {
+            const versionItem = e.target.closest(".version-item");
+            if (versionItem && !e.target.closest(".expand-btn")) {
+              const versionId = versionItem.dataset.versionId;
+              if (versionId) {
+                handleVersionClick(apiId, versionId);
+              }
+            }
+          });
+        }
+      }
+
+      // ===== Data Loading =====
+      async function loadApiDetail(apiId) {
+        try {
+          const response = await apiClient.getUrl(apiId);
+          currentApiUrl = response.data;
+
+          // UI 업데이트
+          document.getElementById("apiName").textContent = currentApiUrl.name;
+          document.getElementById("apiUrl").textContent = currentApiUrl.url;
+
+          const groupEl = document.getElementById("apiGroup");
+          groupEl.textContent = currentApiUrl.group.toUpperCase();
+          groupEl.className = "group-badge";
+          const colors = getGroupColor(currentApiUrl.group);
+          groupEl.style.background = colors.background;
+          groupEl.style.color = colors.color;
+
+          const statusEl = document.getElementById("apiStatus");
+          statusEl.className = `status-badge status-${currentApiUrl.lastFetchStatus}`;
+          statusEl.innerHTML = `<span class="status-dot"></span>${getStatusText(currentApiUrl.lastFetchStatus)}`;
+
+          if (currentApiUrl.lastFetchedAt) {
+            document.getElementById("apiLastFetch").innerHTML =
+              `<img src="/icons/clock.svg" alt="시간" class="icon" width="14" height="14" style="vertical-align: middle; margin-right: 4px;"> ${formatDate(currentApiUrl.lastFetchedAt)}`;
+          }
+
+          document.title = `${currentApiUrl.name} - API Doc Manager`;
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function loadVersions(apiId) {
+        try {
+          const response = await apiClient.getVersions(apiId, { limit: 50 });
+          currentVersions = response.data.versions;
+
+          document.getElementById("versionCount").textContent =
+            `${response.meta.total}개`;
+
+          renderVersionList();
+
+          // 최신 버전 로드
+          if (currentVersions.length > 0) {
+            await loadSwaggerUI(apiId, currentVersions[0].versionId);
+          } else {
+            document.getElementById("swagger-ui").innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <img src="/icons/inbox.svg" alt="빈 상태" class="icon" width="48" height="48">
+              </div>
+              <h3 class="empty-state-title">버전이 없습니다</h3>
+              <p class="empty-state-text">"지금 확인" 버튼을 클릭하여 첫 번째 버전을 가져오세요</p>
+            </div>
+          `;
+          }
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      async function loadSwaggerUI(apiId, versionId) {
+        try {
+          const response = await apiClient.getVersion(apiId, versionId);
+          const version = response.data;
+
+          currentSwaggerJson = version.swaggerJson;
+          selectedVersionId = versionId;
+
+          // 버전 정보 업데이트
+          document.getElementById("currentVersion").textContent =
+            `현재 버전: ${version.versionId}`;
+          document.getElementById("currentVersionDate").textContent =
+            formatDate(version.timestamp);
+
+          // 버전 목록 활성화 상태 업데이트
+          document.querySelectorAll(".version-item").forEach((item) => {
+            item.classList.toggle(
+              "active",
+              item.dataset.versionId === versionId
+            );
+
+            // 활성화된 카드의 변경 내역만 자동 펼침
+            if (item.dataset.versionId === versionId) {
+              const detailsEl = item.querySelector(".change-details");
+              const expandBtn = item.querySelector(".expand-btn");
+
+              if (detailsEl) {
+                detailsEl.classList.add("show");
+                if (expandBtn) expandBtn.classList.add("expanded");
+              }
+            } else {
+              // 비활성화된 카드의 아코디언 접기
+              const detailsEl = item.querySelector(".change-details");
+              const expandBtn = item.querySelector(".expand-btn");
+
+              if (detailsEl) {
+                detailsEl.classList.remove("show");
+                if (expandBtn) expandBtn.classList.remove("expanded");
+              }
+            }
+          });
+
+          // Swagger UI 렌더링 (문서 조회 전용 - 인증/Try it out 비활성화)
+          SwaggerUIBundle({
+            spec: currentSwaggerJson,
+            dom_id: "#swagger-ui",
+            presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+            layout: "BaseLayout",
+            defaultModelsExpandDepth: 1,
+            docExpansion: "list",
+            filter: true,
+            showExtensions: true,
+            supportedSubmitMethods: [], // Try it out 비활성화
+          });
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      // ===== Rendering =====
+      function renderVersionList() {
+        const container = document.getElementById("versionList");
+
+        if (currentVersions.length === 0) {
+          container.innerHTML =
+            '<p style="color: var(--text-muted); font-size: var(--font-size-sm);">버전이 없습니다</p>';
+          return;
+        }
+
+        container.innerHTML = currentVersions
+          .map((v, index) => {
+            // 변경 통계 계산
+            const stats = getChangeStats(v.changes || []);
+            const hasChanges =
+              stats.added > 0 || stats.removed > 0 || stats.modified > 0;
+
+            // 기능 2: 업데이트 날짜 표시
+            const displayDate = v.lastUpdatedAt || v.timestamp;
+            const isUpdated =
+              v.lastUpdatedAt &&
+              new Date(v.lastUpdatedAt).getTime() >
+                new Date(v.timestamp).getTime();
+
+            return `
+        <div class="version-item ${v.versionId === selectedVersionId ? "active" : ""}"
+             data-version-id="${v.versionId}">
+          <div class="version-item-header">
+            <span class="version-id">${v.versionId}</span>
+            <span class="version-date">
+              ${formatDate(displayDate)}
+              ${isUpdated ? '<span class="updated-badge">업데이트</span>' : ""}
+            </span>
+          </div>
+          ${
+            hasChanges
+              ? `
+            <div class="version-changes-wrapper">
+              <button class="expand-btn" onclick="event.stopPropagation(); toggleChangeDetails(${index})" title="상세 보기">▶</button>
+              <div class="version-changes">
+                ${stats.added > 0 ? `<span class="change-badge added">${stats.added}개 추가</span>` : ""}
+                ${stats.removed > 0 ? `<span class="change-badge removed">${stats.removed}개 삭제</span>` : ""}
+                ${stats.modified > 0 ? `<span class="change-badge modified">${stats.modified}개 수정</span>` : ""}
+              </div>
+            </div>
+            <div class="change-details" id="changeDetails-${index}">
+              ${renderChangeDetailsWithTimeline(v.changes || [], v.timestamp, index)}
+            </div>
+          `
+              : v.summary
+                ? `<div class="version-changes">${escapeHtml(v.summary)}</div>`
+                : ""
+          }
+        </div>
+      `;
+          })
+          .join("");
+      }
+
+      // 변경 상세 내역 토글
+      function toggleChangeDetails(index) {
+        const detailsEl = document.getElementById(`changeDetails-${index}`);
+        const btnEl =
+          detailsEl?.previousElementSibling?.querySelector(".expand-btn");
+
+        if (detailsEl) {
+          detailsEl.classList.toggle("show");
+          if (btnEl) {
+            btnEl.classList.toggle("expanded");
+          }
+        }
+      }
+
+      // 변경 상세 내역 렌더링 (아코디언 그룹 + 카드 UI)
+      function renderChangeDetails(changes, versionIndex) {
+        if (!changes || changes.length === 0) {
+          return '<div class="change-card">변경 내역이 없습니다</div>';
+        }
+
+        // 타입별로 그룹화
+        const grouped = { added: [], removed: [], modified: [] };
+        changes.forEach((c) => {
+          if (grouped[c.type]) {
+            grouped[c.type].push(c);
+          }
+        });
+
+        let html = "";
+
+        // 추가된 항목 아코디언
+        if (grouped.added.length > 0) {
+          html += renderAccordionSection(
+            "added",
+            "추가됨",
+            grouped.added,
+            versionIndex
+          );
+        }
+
+        // 삭제된 항목 아코디언
+        if (grouped.removed.length > 0) {
+          html += renderAccordionSection(
+            "removed",
+            "삭제됨",
+            grouped.removed,
+            versionIndex
+          );
+        }
+
+        // 수정된 항목 아코디언
+        if (grouped.modified.length > 0) {
+          html += renderAccordionSection(
+            "modified",
+            "수정됨",
+            grouped.modified,
+            versionIndex
+          );
+        }
+
+        return html;
+      }
+
+      // 기능 3: 타임라인 형태로 변경사항 렌더링 (detectedAt 기준 그룹핑)
+      function renderChangeDetailsWithTimeline(
+        changes,
+        versionTimestamp,
+        versionIndex
+      ) {
+        if (!changes || changes.length === 0) {
+          return '<div class="change-card">변경 내역이 없습니다</div>';
+        }
+
+        // recordedAt 기준으로 그룹핑 (없으면 기본값 사용)
+        const groupedByTime = {};
+        changes.forEach((c) => {
+          const detectedAt = c.recordedAt || versionTimestamp;
+          // 분 단위까지만 그룹핑 (같은 fetch에서 발견된 변경사항 그룹화)
+          const timeKey = new Date(detectedAt).toISOString().slice(0, 16);
+          if (!groupedByTime[timeKey]) {
+            groupedByTime[timeKey] = {
+              timestamp: detectedAt,
+              changes: [],
+            };
+          }
+          groupedByTime[timeKey].changes.push(c);
+        });
+
+        // 시간순 정렬 (최신순)
+        const sortedGroups = Object.values(groupedByTime).sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        // 그룹이 1개뿐이면 기존 방식으로 렌더링
+        if (sortedGroups.length <= 1) {
+          return renderChangeDetails(changes, versionIndex);
+        }
+
+        // 타임라인 형태로 렌더링
+        let html = '<div class="update-timeline">';
+
+        sortedGroups.forEach((group, groupIndex) => {
+          const isFirst = groupIndex === sortedGroups.length - 1; // 가장 오래된 그룹이 첫 번째
+          const prevGroup = sortedGroups[groupIndex + 1];
+
+          // 상대 시간 간격 계산
+          let intervalText = "";
+          if (isFirst) {
+            intervalText = "최초 생성";
+          } else if (prevGroup) {
+            const diff =
+              new Date(group.timestamp) - new Date(prevGroup.timestamp);
+            intervalText = formatTimeDiff(diff);
+          }
+
+          // 해당 그룹의 변경 통계
+          const stats = getChangeStats(group.changes);
+
+          html += `
+            <div class="update-group ${isFirst ? "first" : ""}">
+              <div class="update-group-header">
+                <span class="update-date">${formatDate(group.timestamp)}</span>
+              </div>
+              <div class="update-summary">
+                ${stats.added > 0 ? `<span class="update-summary-item added">${stats.added}개 추가</span>` : ""}
+                ${stats.modified > 0 ? `<span class="update-summary-item modified">${stats.modified}개 수정</span>` : ""}
+                ${stats.removed > 0 ? `<span class="update-summary-item removed">${stats.removed}개 삭제</span>` : ""}
+              </div>
+              ${renderChangeGroupCards(group.changes, versionIndex, groupIndex)}
+            </div>
+          `;
+        });
+
+        html += "</div>";
+        return html;
+      }
+
+      // 시간 차이를 읽기 쉬운 형식으로 변환
+      function formatTimeDiff(diffMs) {
+        const seconds = Math.floor(diffMs / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const weeks = Math.floor(days / 7);
+        const months = Math.floor(days / 30);
+
+        if (months > 0) return `+${months}개월 후`;
+        if (weeks > 0) return `+${weeks}주 후`;
+        if (days > 0) return `+${days}일 후`;
+        if (hours > 0) return `+${hours}시간 후`;
+        if (minutes > 0) return `+${minutes}분 후`;
+        return "직후";
+      }
+
+      // 그룹 내 변경 카드 렌더링
+      function renderChangeGroupCards(changes, versionIndex, groupIndex) {
+        const grouped = { added: [], removed: [], modified: [] };
+        changes.forEach((c) => {
+          if (grouped[c.type]) grouped[c.type].push(c);
+        });
+
+        let html = '<div class="change-group-cards">';
+
+        ["added", "removed", "modified"].forEach((type) => {
+          if (grouped[type].length > 0) {
+            const uniqueId = `accordion-${versionIndex}-${groupIndex}-${type}`;
+            html += `
+              <div class="change-accordion mini">
+                <div class="change-accordion-header ${type}" onclick="toggleAccordionSection('${uniqueId}', this)">
+                  <span class="change-accordion-arrow">▶</span>
+                  <span>${type === "added" ? "추가" : type === "removed" ? "삭제" : "수정"}</span>
+                  <span class="change-accordion-count">${grouped[type].length}</span>
+                </div>
+                <div class="change-accordion-body" id="${uniqueId}">
+                  ${grouped[type].map((c) => renderChangeCard(c, type)).join("")}
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        html += "</div>";
+        return html;
+      }
+
+      // 아코디언 섹션 렌더링
+      function renderAccordionSection(type, label, items, versionIndex) {
+        const sectionId = `accordion-${versionIndex}-${type}`;
+        return `
+          <div class="change-accordion">
+            <div class="change-accordion-header ${type}" onclick="toggleAccordionSection('${sectionId}', this)">
+              <span class="change-accordion-arrow">▶</span>
+              <span>${label}</span>
+              <span class="change-accordion-count">${items.length}</span>
+            </div>
+            <div class="change-accordion-body" id="${sectionId}">
+              ${items.map((c) => renderChangeCard(c, type)).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      // 개별 변경 카드 렌더링
+      function renderChangeCard(change, type) {
+        const methodInfo = extractMethodFromPath(change.path);
+        const category = change.category || "info";
+
+        // 메서드가 있으면 HTTP 메서드 배지, 없으면 카테고리 배지 표시
+        let badgeHtml = "";
+        if (methodInfo.method) {
+          badgeHtml = `<span class="method-badge-mini ${methodInfo.method.toLowerCase()}">${methodInfo.method}</span>`;
+        } else {
+          badgeHtml = `<span class="category-badge-mini ${category}">${getCategoryBadgeLabel(category)}</span>`;
+        }
+
+        return `
+          <div class="change-card ${type}"
+               data-method="${methodInfo.method || ""}"
+               data-path="${escapeHtml(methodInfo.path)}">
+            <div class="change-card-header">
+              ${badgeHtml}
+              <span class="change-card-path">${escapeHtml(methodInfo.path)}</span>
+              <span class="change-card-category">${getCategoryLabel(category)}</span>
+            </div>
+            ${change.description ? `<div class="change-card-desc">${escapeHtml(change.description)}</div>` : ""}
+          </div>
+        `;
+      }
+
+      // 카테고리 배지 라벨 (짧은 영문)
+      function getCategoryBadgeLabel(category) {
+        const labels = {
+          endpoint: "API",
+          parameter: "PARAM",
+          requestBody: "BODY",
+          response: "RESP",
+          schema: "SCHEMA",
+          info: "INFO",
+          description: "DESC",
+        };
+        return labels[category] || category.toUpperCase().slice(0, 6);
+      }
+
+      // 경로에서 HTTP 메서드 추출
+      function extractMethodFromPath(path) {
+        if (!path) return { method: null, path: "" };
+
+        // "GET /api/users" 또는 "POST /api/posts" 형태 매칭
+        const methodMatch = path.match(
+          /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(.+)$/i
+        );
+        if (methodMatch) {
+          return { method: methodMatch[1].toUpperCase(), path: methodMatch[2] };
+        }
+
+        // 메서드 없이 경로만 있는 경우
+        return { method: null, path: path };
+      }
+
+      // 아코디언 섹션 토글
+      function toggleAccordionSection(sectionId, headerEl) {
+        const bodyEl = document.getElementById(sectionId);
+        if (bodyEl) {
+          bodyEl.classList.toggle("show");
+          headerEl.classList.toggle("expanded");
+        }
+      }
+
+      // 카테고리 라벨
+      function getCategoryLabel(category) {
+        const labels = {
+          endpoint: "엔드포인트",
+          parameter: "파라미터",
+          requestBody: "요청 본문",
+          response: "응답",
+          schema: "스키마",
+          info: "정보",
+          description: "설명",
+        };
+        return labels[category] || category;
+      }
+
+      // 변경 통계 계산 함수
+      function getChangeStats(changes) {
+        const stats = { added: 0, removed: 0, modified: 0 };
+        for (const change of changes) {
+          if (change.type === "added") stats.added++;
+          else if (change.type === "removed") stats.removed++;
+          else if (change.type === "modified") stats.modified++;
+        }
+        return stats;
+      }
+
+      // ===== Event Handlers =====
+      async function handleVersionClick(apiId, versionId) {
+        await loadSwaggerUI(apiId, versionId);
+      }
+
+      async function handleFetch(apiId) {
+        const btn = document.getElementById("fetchBtn");
+        const originalText = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = `<img src="/icons/spinner.svg" alt="로딩" class="icon" width="16" height="16" style="margin-right: 4px; vertical-align: middle;"> 확인 중...`;
+
+        try {
+          const response = await apiClient.fetchSwagger(apiId);
+
+          if (response.data.created) {
+            showToast(
+              `새 버전 ${response.data.version.versionId}이(가) 생성되었습니다`,
+              "success"
+            );
+          } else {
+            showToast("변경사항이 없습니다", "info");
+          }
+
+          await loadApiDetail(apiId);
+          await loadVersions(apiId);
+        } catch (error) {
+          showToast(error.message, "error");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+
+      function handleCompare(apiId) {
+        if (currentVersions.length < 2) {
+          showToast("비교할 버전이 2개 이상 필요합니다", "info");
+          return;
+        }
+        window.location.href = `/version-compare?id=${apiId}`;
+      }
+
+      function handleDownloadJson() {
+        if (!currentSwaggerJson) {
+          showToast("다운로드할 JSON이 없습니다", "error");
+          return;
+        }
+
+        const blob = new Blob([JSON.stringify(currentSwaggerJson, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${currentApiUrl?.name || "swagger"}-${selectedVersionId || "latest"}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      async function handleDelete(apiId) {
+        const apiName = currentApiUrl?.name || "API";
+
+        // 확인 대화상자
+        if (
+          !confirm(
+            `"${apiName}" 문서를 삭제하시겠습니까?\n\n모든 버전 히스토리도 함께 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`
+          )
+        ) {
+          return;
+        }
+
+        // 패스워드 확인
+        const password = prompt("삭제를 진행하려면 패스워드를 입력하세요:");
+        if (password !== "hunet!1234") {
+          showToast("패스워드가 일치하지 않습니다.", "error");
+          return;
+        }
+
+        const btn = document.getElementById("deleteBtn");
+        const originalText = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = `<img src="/icons/spinner.svg" alt="로딩" class="icon" width="16" height="16" style="margin-right: 4px; vertical-align: middle;"> 삭제 중...`;
+
+        try {
+          await apiClient.deleteUrl(apiId);
+          showToast(`"${apiName}" 문서가 삭제되었습니다`, "success");
+
+          // 1초 후 목록 페이지로 이동
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 1000);
+        } catch (error) {
+          showToast(error.message, "error");
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+
+      // ===== Utility Functions =====
+      function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("ko-KR", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function getStatusText(status) {
+        const statusMap = { success: "정상", error: "오류", pending: "대기중" };
+        return statusMap[status] || status;
+      }
+
+      function hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash);
+      }
+
+      function getGroupColor(group) {
+        if (!group) return { background: "rgba(97, 175, 254, 0.15)", color: "#0ea5e9" };
+
+        const groupLower = group.toLowerCase().trim();
+
+        // 기존 그룹은 고정된 색상 유지
+        const predefinedColors = {
+          "hu": { background: "rgba(171, 146, 255, 0.15)", color: "#7c3aed" },
+          "플랫폼": { background: "rgba(171, 146, 255, 0.15)", color: "#7c3aed" },
+          "공통": { background: "rgba(97, 175, 254, 0.15)", color: "#0ea5e9" },
+          "러닝": { background: "rgba(73, 204, 144, 0.15)", color: "#10b981" },
+          "learning": { background: "rgba(73, 204, 144, 0.15)", color: "#10b981" },
+          "샘플": { background: "rgba(252, 161, 48, 0.15)", color: "#f59e0b" },
+          "sample": { background: "rgba(252, 161, 48, 0.15)", color: "#f59e0b" },
+          "연수": { background: "rgba(244, 114, 182, 0.15)", color: "#ec4899" },
+          "academy": { background: "rgba(244, 114, 182, 0.15)", color: "#ec4899" }
+        };
+
+        // 기존 그룹 매칭
+        for (const [key, colors] of Object.entries(predefinedColors)) {
+          if (groupLower.includes(key)) {
+            return colors;
+          }
+        }
+
+        // 새로운 그룹: HSL 기반 동적 색상 생성
+        const hash = hashString(groupLower);
+        const hue = hash % 360;
+        const saturation = 65;
+        const lightness = 55;
+
+        return {
+          background: `hsla(${hue}, ${saturation}%, ${lightness}%, 0.15)`,
+          color: `hsl(${hue}, ${saturation}%, ${lightness - 15}%)`
+        };
+      }
+
+      function showToast(message, type = "info") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+      }
+
+      // Swagger UI에서 해당 API operation으로 스크롤
+      function scrollToSwaggerOperation(method, path) {
+        const opblocks = document.querySelectorAll("#swagger-ui .opblock");
+
+        for (const opblock of opblocks) {
+          const summaryMethod = opblock.querySelector(
+            ".opblock-summary-method"
+          );
+          const summaryPath = opblock.querySelector(
+            ".opblock-summary-path, [data-path]"
+          );
+
+          if (summaryMethod && summaryPath) {
+            const blockMethod = summaryMethod.textContent.trim().toUpperCase();
+            // Swagger UI는 path를 span 안의 a 태그나 data-path 속성에 저장
+            const blockPath =
+              summaryPath.getAttribute("data-path") ||
+              summaryPath.textContent.trim();
+
+            if (blockMethod === method.toUpperCase() && blockPath === path) {
+              // 1. 스크롤
+              opblock.scrollIntoView({ behavior: "smooth", block: "center" });
+
+              // 2. 하이라이트 효과
+              opblock.classList.add("highlight-operation");
+              setTimeout(
+                () => opblock.classList.remove("highlight-operation"),
+                2500
+              );
+
+              // 3. 펼치기 (닫혀 있는 경우)
+              const summary = opblock.querySelector(".opblock-summary");
+              if (summary && !opblock.classList.contains("is-open")) {
+                summary.click();
+              }
+
+              return;
+            }
+          }
+        }
+
+        // 찾지 못한 경우 (삭제된 endpoint 등)
+        showToast("해당 API를 Swagger UI에서 찾을 수 없습니다", "info");
+      }
+
+      // 변경 카드 클릭 이벤트 핸들러 설정
+      function setupChangeCardClickHandler() {
+        const versionList = document.getElementById("versionList");
+        if (versionList) {
+          versionList.addEventListener("click", (e) => {
+            const changeCard = e.target.closest(".change-card");
+            if (changeCard) {
+              const method = changeCard.dataset.method;
+              const path = changeCard.dataset.path;
+              if (method && path) {
+                scrollToSwaggerOperation(method, path);
+              }
+            }
+          });
+        }
+      }
+
+      // 페이지 로드 시 핸들러 설정
+      document.addEventListener("DOMContentLoaded", () => {
+        setupChangeCardClickHandler();
+      });
+    </script>
+  </body>
+</html>

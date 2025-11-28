@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>버전 비교 - API Doc Manager</title>
+
+    <!-- Fonts - Swagger UI Style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/diff-view.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <a href="/" class="logo">
+            <div class="logo-icon">
+              <img
+                src="/icons/book.svg"
+                alt="문서"
+                class="icon"
+                width="24"
+                height="24"
+              />
+            </div>
+            <span>API Doc Manager</span>
+          </a>
+          <div class="header-actions">
+            <span id="apiName" style="color: var(--text-secondary)"
+              >로딩 중...</span
+            >
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <a
+          href="javascript:history.back()"
+          class="back-link"
+          style="
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-md);
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+          "
+        >
+          ← 뒤로 가기
+        </a>
+
+        <div class="compare-layout">
+          <!-- Version Selector -->
+          <div class="version-selector">
+            <div class="version-selector-header">
+              <h2 class="version-selector-title">
+                <img
+                  src="/icons/graph.svg"
+                  alt="버전 비교"
+                  class="icon"
+                  width="20"
+                  height="20"
+                  style="vertical-align: middle; margin-right: 8px"
+                />
+                버전 비교
+              </h2>
+            </div>
+            <div class="version-select-group">
+              <div class="version-select-item">
+                <span class="version-select-label">이전 버전</span>
+                <select
+                  id="version1Select"
+                  class="filter-select version-select"
+                ></select>
+              </div>
+
+              <button class="swap-btn" id="swapBtn" title="버전 교체">
+                <img
+                  src="/icons/swap.svg"
+                  alt="교체"
+                  class="icon"
+                  width="20"
+                  height="20"
+                />
+              </button>
+
+              <div class="version-select-item">
+                <span class="version-select-label">비교 버전</span>
+                <select
+                  id="version2Select"
+                  class="filter-select version-select"
+                ></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Changes Summary -->
+          <div class="changes-summary">
+            <div class="changes-summary-header">
+              <h3 class="changes-summary-title">변경사항 요약</h3>
+              <div class="changes-stats">
+                <span
+                  class="changes-stat added"
+                  data-filter="added"
+                  role="button"
+                  tabindex="0"
+                >
+                  + <span id="addedCount">0</span> 추가
+                </span>
+                <span
+                  class="changes-stat removed"
+                  data-filter="removed"
+                  role="button"
+                  tabindex="0"
+                >
+                  − <span id="removedCount">0</span> 삭제
+                </span>
+                <span
+                  class="changes-stat modified"
+                  data-filter="modified"
+                  role="button"
+                  tabindex="0"
+                >
+                  ✎ <span id="modifiedCount">0</span> 수정
+                </span>
+              </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all">전체</button>
+              <button class="filter-tab" data-filter="added">
+                <span style="color: #49cc90">+</span> 추가됨
+              </button>
+              <button class="filter-tab" data-filter="removed">
+                <span style="color: #f93e3e">−</span> 삭제됨
+              </button>
+              <button class="filter-tab" data-filter="modified">
+                <span style="color: #fca130">✎</span> 수정됨
+              </button>
+            </div>
+
+            <!-- Changes List -->
+            <div class="changes-list" id="changesList">
+              <!-- Changes will be rendered here -->
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Toast Container -->
+      <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/icon-utils.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/version-compare.js"></script>
+  </body>
+</html>

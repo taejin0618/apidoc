@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Doc Manager - Swagger 문서 버전 관리</title>
+
+    <!-- Fonts - Swagger UI Style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/style.css" />
+
+    <style>
+      /* 페이지별 추가 스타일 - Swagger UI Theme */
+      .page-title {
+        margin-bottom: var(--space-xl);
+      }
+
+      .page-title h1 {
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        margin-bottom: var(--space-xs);
+        color: var(--text-primary);
+        font-family: var(--font-family);
+      }
+
+      .page-title p {
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-relaxed);
+      }
+
+      .stats-bar {
+        display: flex;
+        gap: var(--space-md);
+        margin-bottom: var(--space-xl);
+        flex-wrap: wrap;
+      }
+
+      .stat-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: var(--space-md);
+        min-width: 150px;
+        box-shadow: var(--shadow-sm);
+        transition: all var(--transition-fast);
+      }
+
+      .stat-card:hover {
+        border-color: var(--method-post);
+        box-shadow: var(--shadow-md);
+      }
+
+      .stat-value {
+        font-size: var(--font-size-2xl);
+        font-weight: var(--font-weight-bold);
+        color: var(--method-post);
+        font-family: var(--font-family);
+      }
+
+      .stat-label {
+        font-size: var(--font-size-sm);
+        color: var(--text-muted);
+        margin-top: var(--space-xs);
+      }
+
+      /* 스켈레톤 UI 스타일 - Swagger UI Operation Block Style */
+      .skeleton-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: var(--space-md);
+        animation: skeleton-pulse 1.5s ease-in-out infinite;
+        opacity: 1;
+        transition: opacity var(--transition-base);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .skeleton-card.fade-out {
+        opacity: 0;
+      }
+
+      .skeleton-header {
+        display: flex;
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
+      }
+
+      .skeleton-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--border-radius);
+        background: var(--bg-tertiary);
+      }
+
+      .skeleton-content {
+        flex: 1;
+      }
+
+      .skeleton-line {
+        height: 16px;
+        background: var(--bg-tertiary);
+        border-radius: var(--border-radius-sm);
+        margin-bottom: var(--space-sm);
+      }
+
+      .skeleton-line.title {
+        width: 60%;
+        height: 20px;
+      }
+
+      .skeleton-line.url {
+        width: 90%;
+        height: 14px;
+      }
+
+      .skeleton-line.description {
+        width: 80%;
+        height: 14px;
+      }
+
+      .skeleton-footer {
+        display: flex;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+        padding-top: var(--space-md);
+        border-top: 1px solid var(--border-color);
+      }
+
+      .skeleton-badge {
+        width: 60px;
+        height: 24px;
+        border-radius: var(--border-radius-sm);
+        background: var(--bg-tertiary);
+      }
+
+      @keyframes skeleton-pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+
+      /* API Grid 페이드 인 효과 */
+      .api-grid {
+        opacity: 1;
+        transition: opacity var(--transition-base);
+      }
+
+      .api-grid.loading {
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <a href="/" class="logo">
+            <div class="logo-icon">
+              <img
+                src="/icons/book.svg"
+                alt="문서"
+                class="icon"
+                width="24"
+                height="24"
+              />
+            </div>
+            <span>API Doc Manager</span>
+          </a>
+          <div class="header-actions">
+            <button class="btn-icon-clean" id="refreshBtn" title="새로고침">
+              <img
+                src="/icons/refresh.svg"
+                alt="새로고침"
+                class="icon"
+                width="22"
+                height="22"
+              />
+            </button>
+            <button class="btn btn-primary" id="addUrlBtn">+ API 추가</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Page Title -->
+        <div class="page-title">
+          <h1>API 문서 관리</h1>
+          <p>Swagger/OpenAPI 문서를 중앙에서 관리하고 변경사항을 추적하세요</p>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <select class="filter-select" id="groupFilter">
+            <option value="">모든 그룹</option>
+          </select>
+          <div class="search-box">
+            <span class="search-icon">
+              <img
+                src="/icons/search.svg"
+                alt="검색"
+                class="icon"
+                width="20"
+                height="20"
+              />
+            </span>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="API 이름 또는 설명으로 검색..."
+            />
+          </div>
+        </div>
+
+        <!-- API Grid -->
+        <div class="api-grid" id="apiGrid">
+          <!-- 초기 로딩 스켈레톤 UI -->
+          <div class="skeleton-card" data-skeleton="true">
+            <div class="skeleton-header">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line title"></div>
+                <div class="skeleton-line url"></div>
+              </div>
+            </div>
+            <div class="skeleton-line description"></div>
+            <div class="skeleton-footer">
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+            </div>
+          </div>
+          <div class="skeleton-card" data-skeleton="true">
+            <div class="skeleton-header">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line title"></div>
+                <div class="skeleton-line url"></div>
+              </div>
+            </div>
+            <div class="skeleton-line description"></div>
+            <div class="skeleton-footer">
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+            </div>
+          </div>
+          <div class="skeleton-card" data-skeleton="true">
+            <div class="skeleton-header">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line title"></div>
+                <div class="skeleton-line url"></div>
+              </div>
+            </div>
+            <div class="skeleton-line description"></div>
+            <div class="skeleton-footer">
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+            </div>
+          </div>
+          <div class="skeleton-card" data-skeleton="true">
+            <div class="skeleton-header">
+              <div class="skeleton-icon"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line title"></div>
+                <div class="skeleton-line url"></div>
+              </div>
+            </div>
+            <div class="skeleton-line description"></div>
+            <div class="skeleton-footer">
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+              <div class="skeleton-badge"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Toast Container -->
+      <div class="toast-container" id="toastContainer"></div>
+
+      <!-- Add URL Modal -->
+      <div class="modal-overlay" id="addUrlModal">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 class="modal-title">API 추가</h2>
+            <button class="modal-close" aria-label="닫기">
+              <img
+                src="/icons/close.svg"
+                alt="닫기"
+                class="icon"
+                width="20"
+                height="20"
+              />
+            </button>
+          </div>
+          <form id="addUrlForm">
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label required" for="urlName"
+                  >서비스명</label
+                >
+                <input
+                  type="text"
+                  id="urlName"
+                  name="name"
+                  class="form-input"
+                  placeholder="예: 결제 시스템 API"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required" for="urlUrl"
+                  >Swagger URL</label
+                >
+                <input
+                  type="url"
+                  id="urlUrl"
+                  name="url"
+                  class="form-input"
+                  placeholder="https://api.example.com/v3/api-docs"
+                  required
+                />
+                <p class="form-hint">
+                  Swagger JSON을 반환하는 URL을 입력하세요
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required" for="urlGroup">그룹</label>
+                <input
+                  type="text"
+                  id="urlGroup"
+                  name="group"
+                  class="form-input"
+                  placeholder="예: payment, member, order"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="urlDescription">설명</label>
+                <textarea
+                  id="urlDescription"
+                  name="description"
+                  class="form-textarea"
+                  placeholder="API에 대한 간략한 설명"
+                ></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary modal-cancel">
+                취소
+              </button>
+              <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Edit URL Modal -->
+      <div class="modal-overlay" id="editUrlModal">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 class="modal-title">API 수정</h2>
+            <button class="modal-close" aria-label="닫기">
+              <img
+                src="/icons/close.svg"
+                alt="닫기"
+                class="icon"
+                width="20"
+                height="20"
+              />
+            </button>
+          </div>
+          <form id="editUrlForm">
+            <input type="hidden" id="editUrlId" name="id" />
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label required" for="editUrlName"
+                  >서비스명</label
+                >
+                <input
+                  type="text"
+                  id="editUrlName"
+                  name="name"
+                  class="form-input"
+                  placeholder="예: 결제 시스템 API"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required" for="editUrlUrl"
+                  >Swagger URL</label
+                >
+                <input
+                  type="url"
+                  id="editUrlUrl"
+                  name="url"
+                  class="form-input"
+                  placeholder="https://api.example.com/v3/api-docs"
+                  required
+                />
+                <p class="form-hint">
+                  Swagger JSON을 반환하는 URL을 입력하세요
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label required" for="editUrlGroup"
+                  >그룹</label
+                >
+                <input
+                  type="text"
+                  id="editUrlGroup"
+                  name="group"
+                  class="form-input"
+                  placeholder="예: payment, member, order"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="editUrlDescription">설명</label>
+                <textarea
+                  id="editUrlDescription"
+                  name="description"
+                  class="form-textarea"
+                  placeholder="API에 대한 간략한 설명"
+                ></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary modal-cancel">
+                취소
+              </button>
+              <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/icon-utils.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/main.js"></script>
+  </body>
+</html>
