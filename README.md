@@ -10,10 +10,10 @@ Swagger/OpenAPI 문서를 중앙에서 관리하고 버전별 변경사항을 �
 ## 스크린샷
 
 ### 메인 페이지 - API 목록
-![메인 페이지](docs/screenshots/main-page.png)
+
 
 ### API 상세 페이지 - Swagger UI 렌더링
-![API 상세](docs/screenshots/api-detail.png)
+
 
 ## 주요 기능
 
