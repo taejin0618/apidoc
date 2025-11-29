@@ -14,9 +14,6 @@ services:
     # 헬스체크
     healthCheckPath: /api/health
 
-    # Node.js 버전 지정
-    nodeVersion: "18"
-
     # 환경변수
     envVars:
       - key: NODE_ENV
