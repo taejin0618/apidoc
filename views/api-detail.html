@@ -865,7 +865,9 @@
             }
 
             // 아코디언 헤더 클릭
-            const accordionHeader = e.target.closest(".change-accordion-header");
+            const accordionHeader = e.target.closest(
+              ".change-accordion-header"
+            );
             if (accordionHeader) {
               const sectionId = accordionHeader.dataset.sectionId;
               if (sectionId) {
@@ -1433,7 +1435,7 @@
 
         // 패스워드 확인
         const password = prompt("삭제를 진행하려면 패스워드를 입력하세요:");
-        if (password !== "hunet!1234") {
+        if (password !== "1234") {
           showToast("패스워드가 일치하지 않습니다.", "error");
           return;
         }
@@ -1487,28 +1489,35 @@
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
           const char = str.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
+          hash = (hash << 5) - hash + char;
           hash = hash & hash; // Convert to 32bit integer
         }
         return Math.abs(hash);
       }
 
       function getGroupColor(group) {
-        if (!group) return { background: "rgba(97, 175, 254, 0.15)", color: "#0ea5e9" };
+        if (!group)
+          return { background: "rgba(97, 175, 254, 0.15)", color: "#0ea5e9" };
 
         const groupLower = group.toLowerCase().trim();
 
         // 기존 그룹은 고정된 색상 유지
         const predefinedColors = {
-          "hu": { background: "rgba(171, 146, 255, 0.15)", color: "#7c3aed" },
-          "플랫폼": { background: "rgba(171, 146, 255, 0.15)", color: "#7c3aed" },
-          "공통": { background: "rgba(97, 175, 254, 0.15)", color: "#0ea5e9" },
-          "러닝": { background: "rgba(73, 204, 144, 0.15)", color: "#10b981" },
-          "learning": { background: "rgba(73, 204, 144, 0.15)", color: "#10b981" },
-          "샘플": { background: "rgba(252, 161, 48, 0.15)", color: "#f59e0b" },
-          "sample": { background: "rgba(252, 161, 48, 0.15)", color: "#f59e0b" },
-          "연수": { background: "rgba(244, 114, 182, 0.15)", color: "#ec4899" },
-          "academy": { background: "rgba(244, 114, 182, 0.15)", color: "#ec4899" }
+          hu: { background: "rgba(171, 146, 255, 0.15)", color: "#7c3aed" },
+          플랫폼: { background: "rgba(171, 146, 255, 0.15)", color: "#7c3aed" },
+          공통: { background: "rgba(97, 175, 254, 0.15)", color: "#0ea5e9" },
+          러닝: { background: "rgba(73, 204, 144, 0.15)", color: "#10b981" },
+          learning: {
+            background: "rgba(73, 204, 144, 0.15)",
+            color: "#10b981",
+          },
+          샘플: { background: "rgba(252, 161, 48, 0.15)", color: "#f59e0b" },
+          sample: { background: "rgba(252, 161, 48, 0.15)", color: "#f59e0b" },
+          연수: { background: "rgba(244, 114, 182, 0.15)", color: "#ec4899" },
+          academy: {
+            background: "rgba(244, 114, 182, 0.15)",
+            color: "#ec4899",
+          },
         };
 
         // 기존 그룹 매칭
@@ -1526,7 +1535,7 @@
 
         return {
           background: `hsla(${hue}, ${saturation}%, ${lightness}%, 0.15)`,
-          color: `hsl(${hue}, ${saturation}%, ${lightness - 15}%)`
+          color: `hsl(${hue}, ${saturation}%, ${lightness - 15}%)`,
         };
       }
 
