@@ -5,7 +5,7 @@ const changeSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ['added', 'removed', 'modified'],
+      enum: ['added', 'removed', 'modified', 'path_version_changed'],
       required: true,
     },
     category: {
@@ -59,6 +59,11 @@ const changeSchema = new mongoose.Schema(
     recordedAt: {
       type: Date,
       default: Date.now,
+    },
+    // 추가 메타데이터 (경로 버전 변경 등)
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
   },
   { _id: true }
@@ -186,13 +191,16 @@ apiVersionSchema.virtual('changeStats').get(function () {
     added: 0,
     removed: 0,
     modified: 0,
+    path_version_changed: 0,
     total: this.changes.length,
     bySeverity: { high: 0, medium: 0, low: 0 },
     byCategory: {},
   };
 
   for (const change of this.changes) {
-    stats[change.type]++;
+    if (stats[change.type] !== undefined) {
+      stats[change.type]++;
+    }
     stats.bySeverity[change.severity]++;
     stats.byCategory[change.category] = (stats.byCategory[change.category] || 0) + 1;
   }

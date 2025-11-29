@@ -431,6 +431,142 @@ const compareComponents = (oldComponents, newComponents) => {
 };
 
 /**
+ * ===== Path 정규화 및 매핑 함수 =====
+ */
+
+/**
+ * 경로에서 버전 접두사를 제거하여 정규화된 키 생성
+ * 지원 패턴: /v1/, /v2/, /api/v1/, /api/internal/v1/ 등
+ * @param {string} path - 원본 경로 (예: "/v1/users/{id}")
+ * @returns {object} { normalizedPath, versionPrefix, originalPath }
+ */
+const normalizePathKey = (path) => {
+  // 버전 패턴: /v숫자/ 형태를 찾음 (대소문자 무관)
+  // 예: /v1/users, /api/v2/orders, /api/internal/v1/admin
+  const versionPattern = /^(.*?)(\/v\d+)(\/.*)?$/i;
+  const match = path.match(versionPattern);
+
+  if (match) {
+    const prefix = match[1] || ''; // "/api" 또는 ""
+    const version = match[2]; // "/v1", "/v2"
+    const rest = match[3] || ''; // "/users/{id}"
+
+    return {
+      normalizedPath: prefix + '/{VERSION}' + rest, // "/api/{VERSION}/users/{id}"
+      versionPrefix: version.toLowerCase(), // "/v1", "/v2"
+      originalPath: path,
+    };
+  }
+
+  // 버전 패턴이 없는 경우
+  return {
+    normalizedPath: path,
+    versionPrefix: null,
+    originalPath: path,
+  };
+};
+
+/**
+ * old/new paths를 정규화된 키로 매핑
+ * 동일 문서 내 여러 버전 공존 케이스도 처리
+ * @param {object} oldPaths - 이전 버전 paths
+ * @param {object} newPaths - 새 버전 paths
+ * @returns {object} { matched, oldOnly, newOnly }
+ */
+const buildPathMapping = (oldPaths, newPaths) => {
+  const oldP = oldPaths || {};
+  const newP = newPaths || {};
+
+  // 1. 정규화된 키로 그룹화 (버전별로 구분)
+  // Map<normalizedPath, Map<versionPrefix, { originalPath, spec }>>
+  const oldByNormalized = new Map();
+  for (const [path, spec] of Object.entries(oldP)) {
+    const { normalizedPath, versionPrefix } = normalizePathKey(path);
+    if (!oldByNormalized.has(normalizedPath)) {
+      oldByNormalized.set(normalizedPath, new Map());
+    }
+    oldByNormalized.get(normalizedPath).set(versionPrefix, { originalPath: path, versionPrefix, spec });
+  }
+
+  const newByNormalized = new Map();
+  for (const [path, spec] of Object.entries(newP)) {
+    const { normalizedPath, versionPrefix } = normalizePathKey(path);
+    if (!newByNormalized.has(normalizedPath)) {
+      newByNormalized.set(normalizedPath, new Map());
+    }
+    newByNormalized.get(normalizedPath).set(versionPrefix, { originalPath: path, versionPrefix, spec });
+  }
+
+  const mapping = {
+    matched: [], // 매칭된 경로 쌍 (버전 변경 또는 스펙 변경)
+    oldOnly: [], // old에만 있는 경로 (진짜 삭제)
+    newOnly: [], // new에만 있는 경로 (진짜 추가)
+  };
+
+  // 2. 모든 정규화된 키 수집
+  const allNormalizedKeys = new Set([...oldByNormalized.keys(), ...newByNormalized.keys()]);
+
+  for (const normalizedKey of allNormalizedKeys) {
+    const oldVersions = oldByNormalized.get(normalizedKey) || new Map();
+    const newVersions = newByNormalized.get(normalizedKey) || new Map();
+
+    // 2.1. 동일 버전끼리 먼저 매칭
+    const matchedVersions = new Set();
+    for (const [version, oldItem] of oldVersions) {
+      if (newVersions.has(version)) {
+        mapping.matched.push({
+          normalizedKey,
+          old: oldItem,
+          new: newVersions.get(version),
+          versionChanged: false,
+        });
+        matchedVersions.add(version);
+      }
+    }
+
+    // 2.2. 남은 old/new 버전들 수집
+    const unmatchedOld = [];
+    const unmatchedNew = [];
+
+    for (const [version, item] of oldVersions) {
+      if (!matchedVersions.has(version)) {
+        unmatchedOld.push(item);
+      }
+    }
+    for (const [version, item] of newVersions) {
+      if (!matchedVersions.has(version)) {
+        unmatchedNew.push(item);
+      }
+    }
+
+    // 2.3. 남은 것들끼리 버전 업그레이드 매칭 시도
+    // 버전 순서로 정렬하여 매칭 (v1 -> v2 등)
+    unmatchedOld.sort((a, b) => (a.versionPrefix || '').localeCompare(b.versionPrefix || ''));
+    unmatchedNew.sort((a, b) => (a.versionPrefix || '').localeCompare(b.versionPrefix || ''));
+
+    const matchCount = Math.min(unmatchedOld.length, unmatchedNew.length);
+    for (let i = 0; i < matchCount; i++) {
+      mapping.matched.push({
+        normalizedKey,
+        old: unmatchedOld[i],
+        new: unmatchedNew[i],
+        versionChanged: unmatchedOld[i].versionPrefix !== unmatchedNew[i].versionPrefix,
+      });
+    }
+
+    // 2.4. 매칭되지 않은 나머지는 추가/삭제
+    for (let i = matchCount; i < unmatchedOld.length; i++) {
+      mapping.oldOnly.push(unmatchedOld[i]);
+    }
+    for (let i = matchCount; i < unmatchedNew.length; i++) {
+      mapping.newOnly.push(unmatchedNew[i]);
+    }
+  }
+
+  return mapping;
+};
+
+/**
  * ===== Endpoint/Operation 레벨 비교 함수 =====
  */
 
@@ -699,141 +835,189 @@ const compareOperation = (oldOp, newOp, path) => {
 };
 
 /**
- * Paths 비교 (endpoint 변경)
+ * Paths 비교 (endpoint 변경) - 정규화 비교 사용
+ * v1 -> v2 버전 변경 시 동일 엔드포인트로 인식하고 스펙 변경만 비교
  */
 const comparePaths = (oldPaths, newPaths) => {
   const changes = [];
-  const oldP = oldPaths || {};
-  const newP = newPaths || {};
-  const allPaths = new Set([...Object.keys(oldP), ...Object.keys(newP)]);
+  const mapping = buildPathMapping(oldPaths, newPaths);
 
-  for (const pathKey of allPaths) {
-    const oldPath = oldP[pathKey];
-    const newPath = newP[pathKey];
+  // 1. 진짜 추가된 엔드포인트 (정규화 후에도 new에만 존재)
+  for (const item of mapping.newOnly) {
+    const methods = extractMethods(item.spec);
+    for (const method of methods) {
+      changes.push({
+        type: 'added',
+        category: 'endpoint',
+        path: `${method.toUpperCase()} ${item.originalPath}`,
+        field: null,
+        oldValue: null,
+        newValue: item.spec[method],
+        description: `새 엔드포인트 추가: ${method.toUpperCase()} ${item.originalPath}`,
+        severity: 'high',
+      });
+    }
+  }
 
-    // 새로 추가된 path
-    if (!oldPath && newPath) {
-      const methods = extractMethods(newPath);
-      for (const method of methods) {
+  // 2. 진짜 삭제된 엔드포인트 (정규화 후에도 old에만 존재)
+  for (const item of mapping.oldOnly) {
+    const methods = extractMethods(item.spec);
+    for (const method of methods) {
+      changes.push({
+        type: 'removed',
+        category: 'endpoint',
+        path: `${method.toUpperCase()} ${item.originalPath}`,
+        field: null,
+        oldValue: item.spec[method],
+        newValue: null,
+        description: `엔드포인트 삭제: ${method.toUpperCase()} ${item.originalPath}`,
+        severity: 'high',
+      });
+    }
+  }
+
+  // 3. 매칭된 엔드포인트 분석 (버전 변경 또는 스펙 변경)
+  for (const match of mapping.matched) {
+    const { old: oldItem, new: newItem, versionChanged, normalizedKey } = match;
+    const oldSpec = oldItem.spec;
+    const newSpec = newItem.spec;
+
+    const oldMethods = extractMethods(oldSpec);
+    const newMethods = extractMethods(newSpec);
+    const allMethods = new Set([...oldMethods, ...newMethods]);
+
+    // path 레벨 공통 속성 비교 (버전 변경과 무관하게)
+    const pathKey = newItem.originalPath;
+
+    const pathLevelParams = compareParameters(oldSpec.parameters, newSpec.parameters, pathKey);
+    changes.push(...pathLevelParams);
+
+    const pathSummaryChanges = compareValues(
+      oldSpec.summary,
+      newSpec.summary,
+      'description',
+      pathKey,
+      'summary',
+      `Path 요약 (${pathKey})`,
+      'low'
+    );
+    changes.push(...pathSummaryChanges);
+
+    const pathDescChanges = compareValues(
+      oldSpec.description,
+      newSpec.description,
+      'description',
+      pathKey,
+      'description',
+      `Path 설명 (${pathKey})`,
+      'low'
+    );
+    changes.push(...pathDescChanges);
+
+    const pathServerChanges = compareArrays(oldSpec.servers, newSpec.servers, 'server', pathKey, 'url', 'medium');
+    changes.push(...pathServerChanges);
+
+    // 메서드별 비교
+    for (const method of allMethods) {
+      const oldMethod = oldSpec[method];
+      const newMethod = newSpec[method];
+      const opPathOld = `${method.toUpperCase()} ${oldItem.originalPath}`;
+      const opPathNew = `${method.toUpperCase()} ${newItem.originalPath}`;
+
+      // 메서드 추가
+      if (!oldMethod && newMethod) {
         changes.push({
           type: 'added',
           category: 'endpoint',
-          path: `${method.toUpperCase()} ${pathKey}`,
+          path: opPathNew,
           field: null,
           oldValue: null,
-          newValue: newPath[method],
-          description: `새 엔드포인트 추가: ${method.toUpperCase()} ${pathKey}`,
+          newValue: newMethod,
+          description: `새 메서드 추가: ${opPathNew}`,
           severity: 'high',
         });
+        continue;
       }
-      continue;
-    }
 
-    // 삭제된 path
-    if (oldPath && !newPath) {
-      const methods = extractMethods(oldPath);
-      for (const method of methods) {
+      // 메서드 삭제
+      if (oldMethod && !newMethod) {
         changes.push({
           type: 'removed',
           category: 'endpoint',
-          path: `${method.toUpperCase()} ${pathKey}`,
+          path: opPathOld,
           field: null,
-          oldValue: oldPath[method],
+          oldValue: oldMethod,
           newValue: null,
-          description: `엔드포인트 삭제: ${method.toUpperCase()} ${pathKey}`,
+          description: `메서드 삭제: ${opPathOld}`,
           severity: 'high',
         });
+        continue;
       }
-      continue;
-    }
 
-    // 수정된 path (method 레벨 비교)
-    if (oldPath && newPath) {
-      const oldMethods = extractMethods(oldPath);
-      const newMethods = extractMethods(newPath);
-      const allMethods = new Set([...oldMethods, ...newMethods]);
+      // 버전 변경 + 스펙 비교
+      if (oldMethod && newMethod) {
+        const specEqual = JSON.stringify(oldMethod) === JSON.stringify(newMethod);
 
-      // path 레벨 공통 속성 비교 (parameters, servers, summary, description)
-      const pathLevelParams = compareParameters(
-        oldPath.parameters,
-        newPath.parameters,
-        pathKey
-      );
-      changes.push(...pathLevelParams);
+        if (versionChanged) {
+          if (specEqual) {
+            // 버전만 변경, 스펙 동일 -> path_version_changed
+            changes.push({
+              type: 'path_version_changed',
+              category: 'endpoint',
+              path: opPathNew,
+              field: 'path',
+              oldValue: {
+                path: oldItem.originalPath,
+                version: oldItem.versionPrefix,
+              },
+              newValue: {
+                path: newItem.originalPath,
+                version: newItem.versionPrefix,
+              },
+              description: `경로 버전 변경: ${oldItem.originalPath} → ${newItem.originalPath}`,
+              severity: 'medium',
+              metadata: {
+                oldPath: oldItem.originalPath,
+                newPath: newItem.originalPath,
+                normalizedPath: normalizedKey,
+                oldVersion: oldItem.versionPrefix,
+                newVersion: newItem.versionPrefix,
+              },
+            });
+          } else {
+            // 버전 변경 + 스펙 변경 -> modified with metadata
+            changes.push({
+              type: 'modified',
+              category: 'endpoint',
+              path: opPathNew,
+              field: 'path_and_spec',
+              oldValue: {
+                path: oldItem.originalPath,
+                version: oldItem.versionPrefix,
+              },
+              newValue: {
+                path: newItem.originalPath,
+                version: newItem.versionPrefix,
+              },
+              description: `엔드포인트 버전 및 스펙 변경: ${oldItem.originalPath} → ${newItem.originalPath}`,
+              severity: 'high',
+              metadata: {
+                versionChanged: true,
+                oldPath: oldItem.originalPath,
+                newPath: newItem.originalPath,
+                normalizedPath: normalizedKey,
+                oldVersion: oldItem.versionPrefix,
+                newVersion: newItem.versionPrefix,
+              },
+            });
 
-      // path 레벨 summary 비교
-      const pathSummaryChanges = compareValues(
-        oldPath.summary,
-        newPath.summary,
-        'description',
-        pathKey,
-        'summary',
-        `Path 요약 (${pathKey})`,
-        'low'
-      );
-      changes.push(...pathSummaryChanges);
-
-      // path 레벨 description 비교
-      const pathDescChanges = compareValues(
-        oldPath.description,
-        newPath.description,
-        'description',
-        pathKey,
-        'description',
-        `Path 설명 (${pathKey})`,
-        'low'
-      );
-      changes.push(...pathDescChanges);
-
-      // path 레벨 servers 비교
-      const pathServerChanges = compareArrays(
-        oldPath.servers,
-        newPath.servers,
-        'server',
-        pathKey,
-        'url',
-        'medium'
-      );
-      changes.push(...pathServerChanges);
-
-      for (const method of allMethods) {
-        const oldMethod = oldPath[method];
-        const newMethod = newPath[method];
-        const opPath = `${method.toUpperCase()} ${pathKey}`;
-
-        // 새 method 추가
-        if (!oldMethod && newMethod) {
-          changes.push({
-            type: 'added',
-            category: 'endpoint',
-            path: opPath,
-            field: null,
-            oldValue: null,
-            newValue: newMethod,
-            description: `새 메서드 추가: ${opPath}`,
-            severity: 'high',
-          });
-          continue;
-        }
-
-        // method 삭제
-        if (oldMethod && !newMethod) {
-          changes.push({
-            type: 'removed',
-            category: 'endpoint',
-            path: opPath,
-            field: null,
-            oldValue: oldMethod,
-            newValue: null,
-            description: `메서드 삭제: ${opPath}`,
-            severity: 'high',
-          });
-          continue;
-        }
-
-        // method 내용 변경 - Operation 상세 비교
-        if (oldMethod && newMethod) {
-          const opChanges = compareOperation(oldMethod, newMethod, opPath);
+            // 상세 변경사항도 추가
+            const opChanges = compareOperation(oldMethod, newMethod, opPathNew);
+            changes.push(...opChanges);
+          }
+        } else {
+          // 버전 동일, 스펙만 비교 (기존 로직)
+          const opChanges = compareOperation(oldMethod, newMethod, opPathNew);
           changes.push(...opChanges);
         }
       }
@@ -997,6 +1181,9 @@ module.exports = {
   compareObjectMaps,
   compareArrays,
   compareValues,
+  // Path 정규화 함수 (테스트용 export)
+  normalizePathKey,
+  buildPathMapping,
   // 전역 레벨
   compareServers,
   compareSecurity,
