@@ -35,3 +35,6 @@ coverage/
 # Temp
 tmp/
 temp/
+
+# Playwright MCP screenshots
+.playwright-mcp/
