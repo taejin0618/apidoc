@@ -164,6 +164,30 @@ npm run format
 node scripts/seed-sample-version.js
 ```
 
+## 개발 워크플로우
+
+이 프로젝트는 간단한 Git 브랜치 전략을 사용합니다:
+
+- **main**: 배포용 브랜치 (안정 버전만, 직접 푸시 금지)
+- **develop**: 개발 통합 브랜치 (평소 작업하는 곳)
+- **feature/기능명**: 새 기능 개발 브랜치 (작업 후 삭제)
+
+### 빠른 시작
+
+```bash
+# 1. develop 브랜치로 이동
+git checkout develop
+git pull origin develop
+
+# 2. 새 기능 브랜치 만들기
+git checkout -b feature/기능명
+
+# 3. 작업 후 Pull Request 생성
+# feature/기능명 → develop
+```
+
+자세한 내용은 [Git 워크플로우 가이드](docs/git-workflow.md)를 참고하세요.
+
 ## 변경사항 심각도
 
 | 심각도 | 기준 | 예시 |
