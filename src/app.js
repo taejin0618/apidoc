@@ -10,6 +10,9 @@ const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
 
+// Trust proxy 설정 (프록시 환경에서 IP 주소 정확히 식별)
+app.set('trust proxy', true);
+
 // ===== 미들웨어 설정 =====
 
 // 보안 헤더 설정
