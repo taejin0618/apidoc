@@ -203,7 +203,9 @@ function renderChangesSummary() {
     added: changes.filter((c) => c.type === "added").length,
     removed: changes.filter((c) => c.type === "removed").length,
     modified: changes.filter((c) => c.type === "modified").length,
-    path_version_changed: changes.filter((c) => c.type === "path_version_changed").length,
+    path_version_changed: changes.filter(
+      (c) => c.type === "path_version_changed"
+    ).length,
   };
 
   document.getElementById("addedCount").textContent = stats.added;
@@ -242,20 +244,94 @@ function renderChangesList() {
     return;
   }
 
-  container.innerHTML = changes
-    .map(
-      (change, index) => `
+  // 엔드포인트별로 그룹화
+  const grouped = groupChangesByEndpoint(changes);
+
+  // 그룹별로 렌더링 (빈 그룹 및 유효하지 않은 그룹 필터링)
+  let globalIndex = 0;
+  container.innerHTML = Object.entries(grouped)
+    .filter(([endpoint, items]) => {
+      // 빈 그룹 스킵
+      if (!items || items.length === 0) return false;
+      // 유효하지 않은 endpoint 스킵 (빈 문자열, _other_ 만 있는 경우 등)
+      if (
+        !endpoint ||
+        endpoint === "_other_" ||
+        endpoint === "_other_undefined"
+      )
+        return false;
+      return true;
+    })
+    .map(([endpoint, items]) => {
+      const isOtherGroup = endpoint.startsWith("_other_");
+      const stats = getGroupStats(items);
+      const statsHtml = renderGroupStats(stats);
+
+      if (isOtherGroup) {
+        // 기타 카테고리 (info, schema 등) - 개별 아이템 렌더링
+        const itemsHtml = items
+          .map((change) => {
+            const html = renderGroupChangeItem(change, globalIndex);
+            globalIndex++;
+            return html;
+          })
+          .join("");
+
+        const categoryName = endpoint.replace("_other_", "");
+        return `
+          <div class="change-group other-group collapsed" data-endpoint="${escapeHtml(endpoint)}">
+            <div class="change-group-header" role="button" tabindex="0">
+              <span class="change-group-icon">📋</span>
+              <span class="change-group-title">${escapeHtml(categoryName)} 변경</span>
+              <span class="change-group-count">${items.length}개</span>
+              ${statsHtml}
+              <button class="change-group-toggle" aria-expanded="false">▶</button>
+            </div>
+            <div class="change-group-body">
+              ${itemsHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      // API 엔드포인트 그룹 - 통합 스펙 비교 렌더링
+      const unifiedBodyHtml = renderUnifiedEndpointBody(endpoint, items);
+      globalIndex += items.length;
+
+      return `
+        <div class="change-group endpoint-group collapsed" data-endpoint="${escapeHtml(endpoint)}">
+          <div class="change-group-header" role="button" tabindex="0">
+            ${getMethodBadge(endpoint)}
+            <span class="change-group-path">${escapeHtml(getPathWithoutMethod(endpoint))}</span>
+            <span class="change-group-count">${items.length}개 변경</span>
+            ${statsHtml}
+            <button class="change-group-toggle" aria-expanded="false">▶</button>
+          </div>
+          <div class="change-group-body unified-body">
+            ${unifiedBodyHtml}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  // 이벤트 위임으로 클릭 핸들러 바인딩
+  attachChangeItemListeners();
+  attachGroupToggleListeners();
+}
+
+/**
+ * 그룹 내 변경사항 아이템 렌더링 (간소화된 버전)
+ */
+function renderGroupChangeItem(change, index) {
+  return `
     <div class="change-item ${change.type}" data-change-index="${index}">
       <div class="change-header" role="button" tabindex="0">
         <div class="change-type-icon">
           ${getChangeIcon(change.type)}
         </div>
         <div class="change-header-content">
-          <div class="change-path-line">
-            ${getMethodBadge(change.path)}
-            <span class="change-path-text">${escapeHtml(getPathWithoutMethod(change.path))}</span>
-          </div>
-          <div class="change-description">${escapeHtml(change.description)}</div>
+          <div class="change-description">${highlightDescription(change.description, change.type)}</div>
           <div class="change-meta">
             <span class="change-category">${getCategoryIcon(change.category)} ${change.category}</span>
           </div>
@@ -266,12 +342,76 @@ function renderChangesList() {
         ${renderChangeDetails(change)}
       </div>
     </div>
-  `
-    )
-    .join("");
+  `;
+}
 
-  // 이벤트 위임으로 클릭 핸들러 바인딩
-  attachChangeItemListeners();
+/**
+ * 그룹 통계 배지 렌더링
+ */
+function renderGroupStats(stats) {
+  const badges = [];
+
+  if (stats.added > 0) {
+    badges.push(`<span class="group-stat-badge added">+${stats.added}</span>`);
+  }
+  if (stats.removed > 0) {
+    badges.push(
+      `<span class="group-stat-badge removed">-${stats.removed}</span>`
+    );
+  }
+  if (stats.modified > 0) {
+    badges.push(
+      `<span class="group-stat-badge modified">✎${stats.modified}</span>`
+    );
+  }
+  if (stats.path_version_changed > 0) {
+    badges.push(
+      `<span class="group-stat-badge version-changed">↑${stats.path_version_changed}</span>`
+    );
+  }
+
+  return `<div class="group-stats">${badges.join("")}</div>`;
+}
+
+/**
+ * 그룹 토글 이벤트 리스너 연결
+ */
+function attachGroupToggleListeners() {
+  const container = document.getElementById("changesList");
+  if (!container) return;
+
+  container.removeEventListener("click", handleGroupToggleClick);
+  container.addEventListener("click", handleGroupToggleClick);
+}
+
+/**
+ * 그룹 토글 클릭 핸들러
+ */
+function handleGroupToggleClick(e) {
+  const groupHeader = e.target.closest(".change-group-header");
+  if (!groupHeader) return;
+
+  // 개별 아이템 헤더 클릭은 무시 (이벤트 버블링 방지)
+  if (e.target.closest(".change-item")) return;
+
+  const group = groupHeader.closest(".change-group");
+  if (!group) return;
+
+  const toggleBtn = group.querySelector(".change-group-toggle");
+
+  if (group.classList.contains("collapsed")) {
+    group.classList.remove("collapsed");
+    if (toggleBtn) {
+      toggleBtn.textContent = "▼";
+      toggleBtn.setAttribute("aria-expanded", "true");
+    }
+  } else {
+    group.classList.add("collapsed");
+    if (toggleBtn) {
+      toggleBtn.textContent = "▶";
+      toggleBtn.setAttribute("aria-expanded", "false");
+    }
+  }
 }
 
 /**
@@ -316,7 +456,12 @@ function renderChangeDetails(change) {
  */
 function isEndpointChange(change) {
   // 카테고리가 endpoint, parameter, requestBody, response인 경우
-  const endpointCategories = ["endpoint", "parameter", "requestBody", "response"];
+  const endpointCategories = [
+    "endpoint",
+    "parameter",
+    "requestBody",
+    "response",
+  ];
   if (endpointCategories.includes(change.category)) {
     return true;
   }
@@ -333,6 +478,97 @@ function isEndpointChange(change) {
   }
 
   return false;
+}
+
+/**
+ * 엔드포인트 통합 카드 본문 렌더링
+ * 같은 엔드포인트의 모든 변경사항을 하나의 통합된 화면으로 표시
+ */
+function renderUnifiedEndpointBody(endpoint, items) {
+  const { method, path } = extractMethodAndPath(endpoint);
+
+  if (!method || !path) {
+    // 메서드/경로 추출 실패시 개별 아이템 렌더링으로 폴백
+    return items.map((change, i) => renderGroupChangeItem(change, i)).join("");
+  }
+
+  // swaggerJson에서 스펙 가져오기
+  const v1SwaggerJson = currentComparison.v1?.swaggerJson;
+  const v2SwaggerJson = currentComparison.v2?.swaggerJson;
+
+  // path_version_changed 변경사항 찾기 (있으면 oldPath/newPath 사용)
+  const versionChange = items.find(
+    (c) => c.type === "path_version_changed" || c.metadata?.versionChanged
+  );
+
+  let oldPath = path;
+  let newPath = path;
+
+  if (versionChange) {
+    oldPath =
+      versionChange.oldValue?.path || versionChange.metadata?.oldPath || path;
+    newPath =
+      versionChange.newValue?.path || versionChange.metadata?.newPath || path;
+  }
+
+  // 스펙 추출
+  const oldSpec = getEndpointSpec(v1SwaggerJson, oldPath, method);
+  const newSpec = getEndpointSpec(v2SwaggerJson, newPath, method);
+
+  // 변경사항 요약 렌더링
+  const summaryHtml = renderChangesSummaryList(items);
+
+  // 스펙이 없는 경우
+  if (!oldSpec && !newSpec) {
+    return `
+      <div class="unified-endpoint-content">
+        ${summaryHtml}
+        <div class="spec-empty-message">
+          <p>스펙 정보를 가져올 수 없습니다.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // 통합 스펙 비교 렌더링
+  const specCompareHtml = renderSideBySideSpec(
+    oldSpec,
+    newSpec,
+    versionChange || items[0]
+  );
+
+  return `
+    <div class="unified-endpoint-content">
+      ${summaryHtml}
+      ${specCompareHtml}
+    </div>
+  `;
+}
+
+/**
+ * 변경사항 요약 목록 렌더링
+ */
+function renderChangesSummaryList(items) {
+  const summaryItems = items
+    .map((change) => {
+      const icon = getChangeIcon(change.type);
+      const typeClass = change.type;
+      return `
+        <div class="change-summary-item ${typeClass}">
+          <span class="change-summary-icon">${icon}</span>
+          <span class="change-summary-text">${highlightDescription(change.description, change.type)}</span>
+          <span class="change-summary-category">${change.category}</span>
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <div class="changes-summary-list">
+      <div class="changes-summary-title">변경사항 요약</div>
+      ${summaryItems}
+    </div>
+  `;
 }
 
 /**
@@ -673,6 +909,86 @@ function getFilterLabel(filter) {
   return labels[filter] || "";
 }
 
+// ===== 엔드포인트 그룹화 및 텍스트 강조 =====
+
+/**
+ * 변경사항을 엔드포인트별로 그룹화
+ * @param {Array} changes - 변경사항 배열
+ * @returns {Object} { "GET /v3/api/posts": [...changes], ... }
+ */
+function groupChangesByEndpoint(changes) {
+  return changes.reduce((groups, change) => {
+    // API 엔드포인트인지 확인
+    const key = isApiEndpointPath(change.path)
+      ? change.path
+      : `_other_${change.category}`;
+
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(change);
+    return groups;
+  }, {});
+}
+
+/**
+ * API 엔드포인트 경로인지 확인
+ */
+function isApiEndpointPath(path) {
+  if (!path) return false;
+  return /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s/i.test(path);
+}
+
+/**
+ * 변경 설명 텍스트에 강조 표시 추가
+ * @param {string} description - 변경 설명
+ * @param {string} type - 변경 유형 (added, removed, modified 등)
+ * @returns {string} HTML 문자열
+ */
+function highlightDescription(description, type) {
+  if (!description) return "";
+
+  let result = escapeHtml(description);
+
+  // 화살표(→) 패턴: 이전 → 이후 (경로 버전 변경 등)
+  if (result.includes("→")) {
+    result = result.replace(
+      /(\S+)\s*→\s*(\S+)/g,
+      '<span class="highlight-old">$1</span> → <span class="highlight-new">$2</span>'
+    );
+  }
+
+  // 콜론(:) 뒤의 값 강조 (파라미터 추가: page 등)
+  else if (result.includes(":") && !result.includes("응답 코드")) {
+    const colonIndex = result.indexOf(":");
+    const prefix = result.substring(0, colonIndex);
+    const value = result.substring(colonIndex + 1).trim();
+
+    if (value) {
+      if (type === "removed") {
+        result = `${prefix}: <span class="highlight-removed">${value}</span>`;
+      } else if (type === "added") {
+        result = `${prefix}: <span class="highlight-added">${value}</span>`;
+      } else {
+        result = `${prefix}: <span class="highlight-field">${value}</span>`;
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * 그룹의 변경 유형별 통계 계산
+ */
+function getGroupStats(items) {
+  return {
+    added: items.filter((c) => c.type === "added").length,
+    removed: items.filter((c) => c.type === "removed").length,
+    modified: items.filter((c) => c.type === "modified").length,
+    path_version_changed: items.filter((c) => c.type === "path_version_changed")
+      .length,
+  };
+}
+
 // ===== Spec Extraction and Comparison =====
 
 /**
@@ -689,7 +1005,7 @@ function extractMethodAndPath(pathStr) {
     if (upperPath.startsWith(method + " ")) {
       return {
         method: method.toLowerCase(),
-        path: pathStr.substring(method.length + 1).trim()
+        path: pathStr.substring(method.length + 1).trim(),
       };
     }
   }
@@ -807,7 +1123,10 @@ function renderSideBySideSpec(oldSpec, newSpec, change) {
 
   // 경로 정보 (버전 변경인 경우)
   let pathInfo = "";
-  if (change.type === "path_version_changed" || change.metadata?.versionChanged) {
+  if (
+    change.type === "path_version_changed" ||
+    change.metadata?.versionChanged
+  ) {
     const oldPath = change.oldValue?.path || change.metadata?.oldPath || "";
     const newPath = change.newValue?.path || change.metadata?.newPath || "";
     pathInfo = `
@@ -832,24 +1151,47 @@ function renderSideBySideSpec(oldSpec, newSpec, change) {
     const newValue = newSections ? newSections[section.key] : null;
 
     // 둘 다 비어있으면 스킵
-    const oldEmpty = oldValue === null || oldValue === undefined ||
-                     (Array.isArray(oldValue) && oldValue.length === 0) ||
-                     (typeof oldValue === "object" && !Array.isArray(oldValue) && Object.keys(oldValue).length === 0);
-    const newEmpty = newValue === null || newValue === undefined ||
-                     (Array.isArray(newValue) && newValue.length === 0) ||
-                     (typeof newValue === "object" && !Array.isArray(newValue) && Object.keys(newValue).length === 0);
+    const oldEmpty =
+      oldValue === null ||
+      oldValue === undefined ||
+      (Array.isArray(oldValue) && oldValue.length === 0) ||
+      (typeof oldValue === "object" &&
+        !Array.isArray(oldValue) &&
+        Object.keys(oldValue).length === 0);
+    const newEmpty =
+      newValue === null ||
+      newValue === undefined ||
+      (Array.isArray(newValue) && newValue.length === 0) ||
+      (typeof newValue === "object" &&
+        !Array.isArray(newValue) &&
+        Object.keys(newValue).length === 0);
 
     if (oldEmpty && newEmpty) continue;
 
     // 변경 여부 확인
     const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(newValue);
-    const changeClass = hasChanged ? "has-diff" : "";
+
+    if (!hasChanged) {
+      // 동일한 값 - 단일 컬럼으로 병합 표시
+      sectionsHtml += `
+        <div class="spec-section-row unchanged">
+          <div class="spec-section-header">
+            <span class="spec-section-title">${escapeHtml(section.title)}</span>
+            <span class="same-indicator">동일</span>
+          </div>
+          <div class="spec-section-content single-col">
+            ${renderSpecValue(newValue, newEmpty)}
+          </div>
+        </div>
+      `;
+      continue;
+    }
 
     sectionsHtml += `
-      <div class="spec-section-row ${changeClass}">
+      <div class="spec-section-row has-diff">
         <div class="spec-section-header">
           <span class="spec-section-title">${escapeHtml(section.title)}</span>
-          ${hasChanged ? '<span class="diff-indicator">변경됨</span>' : ""}
+          <span class="diff-indicator">변경됨</span>
         </div>
         <div class="spec-section-compare">
           <div class="spec-col old-col">

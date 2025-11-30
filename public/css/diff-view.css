@@ -209,10 +209,9 @@
   padding: var(--space-md);
   background: var(--bg-secondary);
   border-radius: var(--border-radius);
-  border-left: 3px solid transparent;
   border: 1px solid var(--border-color);
+  border-left: 3px solid transparent;
   transition: all var(--transition-fast);
-  margin-bottom: var(--space-md);
   box-shadow: var(--shadow-sm);
 }
 
@@ -254,7 +253,6 @@
   border-left: 3px solid var(--method-post);
   background: var(--opblock-post-bg);
 }
-
 
 .change-item.added {
   border-left-color: var(--method-post);
@@ -409,7 +407,6 @@
   gap: var(--space-md);
   cursor: pointer;
   padding: var(--space-sm);
-  margin: calc(-1 * var(--space-sm));
   border-radius: var(--border-radius);
   transition: background var(--transition-fast);
 }
@@ -938,6 +935,36 @@
   background: rgba(252, 161, 48, 0.03);
 }
 
+/* 동일한 섹션 - 단일 컬럼 병합 */
+.spec-section-row.unchanged {
+  background: var(--bg-secondary);
+  opacity: 0.7;
+}
+
+.spec-section-row.unchanged:hover {
+  opacity: 0.9;
+}
+
+.spec-section-content.single-col {
+  padding: var(--space-md);
+  background: var(--bg-primary);
+}
+
+.spec-section-content.single-col .spec-value {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.same-indicator {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: var(--space-sm);
+  font-weight: var(--font-weight-normal);
+}
+
 /* 섹션 헤더 */
 .spec-section-header {
   display: flex;
@@ -1050,7 +1077,7 @@
   }
 
   .spec-col.old-col::before {
-    content: '이전';
+    content: "이전";
     display: block;
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
@@ -1060,7 +1087,7 @@
   }
 
   .spec-col.new-col::before {
-    content: '현재';
+    content: "현재";
     display: block;
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
@@ -1121,6 +1148,322 @@
 
   .filter-tab {
     padding: 4px 12px;
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ===== 엔드포인트 그룹 스타일 ===== */
+
+/* 그룹 컨테이너 */
+.change-group {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.change-group:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* 그룹 헤더 */
+.change-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: #f8fafc;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 48px;
+}
+
+.change-group-header:hover {
+  background: #f1f5f9;
+}
+
+.change-group.collapsed .change-group-header {
+  border-bottom: none;
+}
+
+/* 그룹 제목/경로 */
+.change-group-path {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.change-group-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.change-group-icon {
+  font-size: 16px;
+}
+
+/* 그룹 카운트 배지 */
+.change-group-count {
+  color: #64748b;
+  font-size: 12px;
+  background: #e2e8f0;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* 그룹 통계 배지 */
+.group-stats {
+  display: flex;
+  gap: var(--space-xs);
+  margin-left: auto;
+  margin-right: var(--space-sm);
+}
+
+.group-stat-badge {
+  font-size: var(--font-size-xs);
+  padding: 2px 6px;
+  border-radius: var(--border-radius-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.group-stat-badge.added {
+  background: rgba(73, 204, 144, 0.15);
+  color: var(--method-post);
+}
+
+.group-stat-badge.removed {
+  background: rgba(249, 62, 62, 0.15);
+  color: var(--method-delete);
+}
+
+.group-stat-badge.modified {
+  background: rgba(252, 161, 48, 0.15);
+  color: var(--method-put);
+}
+
+.group-stat-badge.version-changed {
+  background: rgba(97, 175, 254, 0.15);
+  color: var(--method-get);
+}
+
+/* 그룹 토글 버튼 */
+.change-group-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  padding: var(--space-xs);
+  line-height: 1;
+  transition: transform var(--transition-fast);
+}
+
+.change-group.collapsed .change-group-toggle {
+  transform: rotate(-90deg);
+}
+
+/* 그룹 바디 */
+.change-group-body {
+  padding: var(--space-sm);
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.change-group.collapsed .change-group-body {
+  display: none;
+}
+
+/* 그룹 내 아이템 스타일 조정 */
+.change-group-body .change-item {
+  border-radius: var(--border-radius);
+}
+
+/* 그룹 내 아이템은 더 컴팩트하게 */
+.change-group-body .change-header-content {
+  padding-right: 0;
+}
+
+.change-group-body .change-path-line {
+  display: none; /* 그룹 헤더에 이미 표시됨 */
+}
+
+/* ===== 통합 엔드포인트 카드 스타일 ===== */
+
+.change-group-body.unified-body {
+  padding: 0;
+  gap: 0;
+}
+
+.unified-endpoint-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 변경사항 요약 목록 */
+.changes-summary-list {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-md);
+}
+
+.changes-summary-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.change-summary-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.change-summary-item.added {
+  color: var(--method-post);
+}
+
+.change-summary-item.removed {
+  color: var(--method-delete);
+}
+
+.change-summary-item.modified,
+.change-summary-item.path_version_changed {
+  color: var(--method-patch);
+}
+
+.change-summary-icon {
+  font-size: var(--font-size-base);
+  flex-shrink: 0;
+}
+
+.change-summary-text {
+  flex: 1;
+}
+
+.change-summary-category {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+/* 통합 카드 내 스펙 비교 컨테이너 */
+.unified-endpoint-content .spec-comparison-container {
+  border: none;
+  border-radius: 0;
+}
+
+/* ===== 텍스트 강조 스타일 ===== */
+
+/* 이전 값 강조 (취소선 + 빨강) */
+.highlight-old {
+  background: rgba(249, 62, 62, 0.12);
+  color: var(--method-delete);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-decoration: line-through;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* 새 값 강조 (초록 + 볼드) */
+.highlight-new {
+  background: rgba(73, 204, 144, 0.12);
+  color: var(--method-post);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* 추가된 필드 강조 */
+.highlight-added {
+  color: var(--method-post);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* 삭제된 필드 강조 */
+.highlight-removed {
+  color: var(--method-delete);
+  text-decoration: line-through;
+}
+
+/* 일반 필드 강조 */
+.highlight-field {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* ===== 그룹 반응형 스타일 ===== */
+
+@media (max-width: 768px) {
+  .change-group-header {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+  }
+
+  .change-group-path,
+  .change-group-title {
+    flex: 1 1 100%;
+    order: 1;
+    margin-bottom: var(--space-xs);
+  }
+
+  .change-group-header .method-badge {
+    order: 0;
+  }
+
+  .change-group-count {
+    order: 2;
+  }
+
+  .group-stats {
+    order: 3;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .change-group-toggle {
+    order: 4;
+    margin-left: auto;
+  }
+
+  .change-group-body {
+    padding: var(--space-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .group-stats {
+    display: none; /* 모바일에서는 숨김 */
+  }
+
+  .change-group-path,
+  .change-group-title {
+    font-size: var(--font-size-sm);
+  }
+
+  .change-group-count {
     font-size: var(--font-size-xs);
   }
 }
