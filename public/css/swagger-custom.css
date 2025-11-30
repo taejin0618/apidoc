@@ -330,7 +330,7 @@ body #swagger-ui {
 
 /* Model toggle button */
 .swagger-ui .model-toggle {
-  background: #ffffff !important;
+  background: transparent !important;
 }
 
 .swagger-ui .model-toggle:hover {

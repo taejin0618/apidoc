@@ -39,3 +39,4 @@ temp/
 .playwright-mcp/
 
 CLAUDE.md
+.cursor/
