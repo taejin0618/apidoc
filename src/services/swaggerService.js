@@ -15,12 +15,18 @@ const fetchSwaggerJson = async (url, timeout = 15000) => {
       timeout,
       headers: {
         Accept: 'application/json',
+        'User-Agent': 'Mozilla/5.0 (compatible; ApiDocManager/1.0)',
       },
       validateStatus: (status) => status < 500,
     });
 
     if (response.status === 404) {
       throw new Error('URL을 찾을 수 없습니다 (404)');
+    }
+
+    if (response.status === 401) {
+      const errorMessage = '인증이 필요합니다 (401). 서버에서 인증이 필요하거나 Vercel Password Protection이 활성화되어 있을 수 있습니다.';
+      throw new Error(errorMessage);
     }
 
     if (response.status !== 200) {
@@ -36,6 +42,17 @@ const fetchSwaggerJson = async (url, timeout = 15000) => {
 
     return json;
   } catch (error) {
+    // axios 에러 응답 처리
+    if (error.response) {
+      if (error.response.status === 401) {
+        throw new Error('인증이 필요합니다 (401). 서버에서 인증이 필요하거나 Vercel Password Protection이 활성화되어 있을 수 있습니다.');
+      }
+      if (error.response.status === 404) {
+        throw new Error('URL을 찾을 수 없습니다 (404)');
+      }
+      throw new Error(`HTTP 에러: ${error.response.status}`);
+    }
+
     if (error.code === 'ECONNABORTED') {
       throw new Error(`타임아웃: ${timeout}ms 초과`);
     }
