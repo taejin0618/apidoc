@@ -11,7 +11,11 @@ const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 const app = express();
 
 // Trust proxy 설정 (프록시 환경에서 IP 주소 정확히 식별)
-app.set('trust proxy', true);
+// 보안을 위해 첫 번째 프록시만 신뢰 (개발: 1, 프로덕션: 환경 변수로 제어)
+// true로 설정하면 rate limiting을 우회할 수 있어 보안 경고 발생
+const trustProxy = process.env.TRUST_PROXY === 'true' ? true :
+                   process.env.TRUST_PROXY ? parseInt(process.env.TRUST_PROXY) : 1;
+app.set('trust proxy', trustProxy);
 
 // ===== 미들웨어 설정 =====
 
