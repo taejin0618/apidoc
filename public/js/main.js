@@ -252,7 +252,7 @@ function updateGroupOptions(groups) {
   if (!select) return;
 
   const currentValue = select.value;
-  select.innerHTML = '<option value="">모든 그룹</option>';
+  select.innerHTML = '<option value="">모든 팀</option>';
 
   groups.forEach((group) => {
     const option = document.createElement("option");
@@ -290,6 +290,7 @@ async function handleAddUrl(e) {
       name: form.name.value.trim(),
       url: form.url.value.trim(),
       group: form.group.value.trim().toLowerCase(),
+      service: form.service.value.trim().toLowerCase(),
       description: form.description.value.trim(),
     };
 
@@ -322,6 +323,7 @@ async function openEditModal(id) {
     document.getElementById("editUrlName").value = url.name || "";
     document.getElementById("editUrlUrl").value = url.url || "";
     document.getElementById("editUrlGroup").value = url.group || "";
+    document.getElementById("editUrlService").value = url.service || "";
     document.getElementById("editUrlDescription").value = url.description || "";
 
     // 모달 열기
@@ -347,6 +349,7 @@ async function handleEditUrl(e) {
       name: form.name.value.trim(),
       url: form.url.value.trim(),
       group: form.group.value.trim().toLowerCase(),
+      service: form.service.value.trim().toLowerCase(),
       description: form.description.value.trim(),
     };
 

@@ -24,10 +24,18 @@ const apiUrlSchema = new mongoose.Schema(
       },
     },
 
-    // 카테고리/그룹
+    // 팀
     group: {
       type: String,
-      required: [true, '그룹은 필수입니다'],
+      required: [true, '팀은 필수입니다'],
+      trim: true,
+      lowercase: true,
+    },
+
+    // 서비스
+    service: {
+      type: String,
+      required: [true, '서비스는 필수입니다'],
       trim: true,
       lowercase: true,
     },
@@ -98,6 +106,7 @@ const apiUrlSchema = new mongoose.Schema(
 
 // 인덱스 생성
 apiUrlSchema.index({ group: 1 });
+apiUrlSchema.index({ service: 1 });
 apiUrlSchema.index({ isActive: 1 });
 apiUrlSchema.index({ lastFetchStatus: 1 });
 apiUrlSchema.index({ name: 'text', description: 'text' }); // 텍스트 검색용

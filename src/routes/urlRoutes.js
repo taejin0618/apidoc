@@ -18,7 +18,10 @@ const createUrlSchema = Joi.object({
     'string.empty': 'URL은 필수입니다',
   }),
   group: Joi.string().required().messages({
-    'string.empty': '그룹은 필수입니다',
+    'string.empty': '팀은 필수입니다',
+  }),
+  service: Joi.string().required().messages({
+    'string.empty': '서비스는 필수입니다',
   }),
   description: Joi.string().max(500).allow('').optional(),
   owner: Joi.string().email().allow('').optional(),
@@ -30,6 +33,7 @@ const updateUrlSchema = Joi.object({
   name: Joi.string().max(100).optional(),
   url: Joi.string().uri({ scheme: ['http', 'https'] }).optional(),
   group: Joi.string().optional(),
+  service: Joi.string().optional(),
   description: Joi.string().max(500).allow('').optional(),
   owner: Joi.string().email().allow('').optional(),
   tags: Joi.array().items(Joi.string()).optional(),
@@ -63,11 +67,12 @@ const validateRequest = (schema) => (req, res, next) => {
  */
 router.get('/', async (req, res, next) => {
   try {
-    const { group, isActive, search, sort = '-updatedAt', page = 1, limit = 50 } = req.query;
+    const { group, service, isActive, search, sort = '-updatedAt', page = 1, limit = 50 } = req.query;
 
     // 필터 조건 구성
     const filter = {};
     if (group) filter.group = group.toLowerCase();
+    if (service) filter.service = service.toLowerCase();
     if (isActive !== undefined) filter.isActive = isActive === 'true';
     if (search) {
       filter.$or = [
