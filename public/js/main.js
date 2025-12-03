@@ -42,6 +42,12 @@ function setupEventListeners() {
     serviceFilter.addEventListener("change", handleServiceFilter);
   }
 
+  // 초기화 버튼
+  const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+  if (resetFiltersBtn) {
+    resetFiltersBtn.addEventListener("click", resetFilters);
+  }
+
   // URL 추가 버튼
   const addUrlBtn = document.getElementById("addUrlBtn");
   if (addUrlBtn) {
@@ -344,6 +350,34 @@ function handleTeamFilter(e) {
 
 function handleServiceFilter(e) {
   currentFilter.service = e.target.value;
+  loadUrls();
+}
+
+function resetFilters() {
+  // currentFilter 초기화
+  currentFilter = { group: "", service: "", search: "" };
+
+  // 필터 select 요소들 초기화
+  const teamFilter = document.getElementById("teamFilter");
+  if (teamFilter) {
+    teamFilter.value = "";
+  }
+
+  const serviceFilter = document.getElementById("serviceFilter");
+  if (serviceFilter) {
+    serviceFilter.value = "";
+  }
+
+  // 검색 입력 필드 비우기
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.value = "";
+  }
+
+  // 서비스 옵션 업데이트 (팀 필터가 없으므로 전체 서비스 표시)
+  updateServiceOptions();
+
+  // 데이터 다시 로드
   loadUrls();
 }
 

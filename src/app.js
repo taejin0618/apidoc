@@ -84,6 +84,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Swagger 문서 라우트
+app.use('/api', require('./routes/swaggerRoutes'));
+
 // URL 관리 라우트
 app.use('/api/urls', require('./routes/urlRoutes'));
 
@@ -108,6 +111,11 @@ app.get('/api-detail', (req, res) => {
 // 버전 비교 페이지
 app.get('/version-compare', (req, res) => {
   res.sendFile(path.join(__dirname, '../views/version-compare.html'));
+});
+
+// Swagger UI 페이지
+app.get('/api-docs', (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/swagger-ui.html'));
 });
 
 // ===== 에러 핸들러 =====
