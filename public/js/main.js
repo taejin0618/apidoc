@@ -4,7 +4,8 @@
 
 // ===== DOM Elements =====
 let urlsData = [];
-let currentFilter = { group: "", search: "" };
+let currentFilter = { group: "", service: "", search: "" };
+let servicesByGroup = {}; // 팀별 서비스 목록
 
 // ===== Initialize =====
 // DOM이 이미 로드되었거나 로드 중인 경우 처리
@@ -29,10 +30,16 @@ function setupEventListeners() {
     searchInput.addEventListener("input", debounce(handleSearch, 300));
   }
 
-  // 그룹 필터
-  const groupFilter = document.getElementById("groupFilter");
-  if (groupFilter) {
-    groupFilter.addEventListener("change", handleGroupFilter);
+  // 팀 필터
+  const teamFilter = document.getElementById("teamFilter");
+  if (teamFilter) {
+    teamFilter.addEventListener("change", handleTeamFilter);
+  }
+
+  // 서비스 필터
+  const serviceFilter = document.getElementById("serviceFilter");
+  if (serviceFilter) {
+    serviceFilter.addEventListener("change", handleServiceFilter);
   }
 
   // URL 추가 버튼
@@ -109,18 +116,36 @@ async function loadUrls() {
   }
 
   try {
+    // 정렬 기준 결정
+    let sortParam = '-updatedAt'; // 기본 정렬
+    if (currentFilter.group && currentFilter.service) {
+      sortParam = 'group service'; // 팀과 서비스 모두 선택시: 팀별, 서비스별 정렬
+    } else if (currentFilter.group) {
+      sortParam = 'group service'; // 팀만 선택시: 팀별, 서비스별 정렬
+    } else if (currentFilter.service) {
+      sortParam = 'service'; // 서비스만 선택시: 서비스별 정렬
+    }
+
     const response = await apiClient.getUrls({
       group: currentFilter.group || undefined,
+      service: currentFilter.service || undefined,
       search: currentFilter.search || undefined,
+      sort: sortParam,
     });
 
     console.log("API Response:", response);
     urlsData = response.data;
     console.log("urlsData:", urlsData);
 
-    // 그룹 필터 옵션 업데이트
-    if (response.meta && response.meta.groups) {
-      updateGroupOptions(response.meta.groups);
+    // 필터 옵션 업데이트
+    if (response.meta) {
+      if (response.meta.groups) {
+        updateTeamOptions(response.meta.groups);
+      }
+      if (response.meta.servicesByGroup) {
+        servicesByGroup = response.meta.servicesByGroup;
+      }
+      updateServiceOptions();
     }
 
     // 스켈레톤 UI 페이드 아웃 후 실제 데이터 렌더링
@@ -200,6 +225,7 @@ function renderUrlCards(urls) {
       <div class="card-footer">
         <div class="api-card-meta">
           <span class="group-badge" style="background: ${getGroupColor(url.group).background}; color: ${getGroupColor(url.group).color};">${escapeHtml(url.group)}</span>
+          ${url.service ? `<span class="group-badge" style="background: ${getServiceColor(url.service).background}; color: ${getServiceColor(url.service).color};">${escapeHtml(url.service)}</span>` : ""}
           <span class="status-badge status-${url.lastFetchStatus}">
             <span class="status-dot"></span>
             ${getStatusText(url.lastFetchStatus)}
@@ -247,12 +273,12 @@ function renderUrlCards(urls) {
   }
 }
 
-function updateGroupOptions(groups) {
-  const select = document.getElementById("groupFilter");
+function updateTeamOptions(groups) {
+  const select = document.getElementById("teamFilter");
   if (!select) return;
 
   const currentValue = select.value;
-  select.innerHTML = '<option value="">모든 팀</option>';
+  select.innerHTML = '<option value="">전체 팀</option>';
 
   groups.forEach((group) => {
     const option = document.createElement("option");
@@ -264,14 +290,60 @@ function updateGroupOptions(groups) {
   select.value = currentValue;
 }
 
+function updateServiceOptions() {
+  const select = document.getElementById("serviceFilter");
+  if (!select) return;
+
+  const currentValue = select.value;
+  const selectedTeam = document.getElementById("teamFilter")?.value || "";
+
+  // 팀이 선택된 경우 해당 팀의 서비스만 표시
+  let servicesToShow = [];
+  if (selectedTeam && servicesByGroup[selectedTeam]) {
+    servicesToShow = servicesByGroup[selectedTeam];
+  } else {
+    // 모든 서비스 표시 (팀별 서비스 목록에서 중복 제거)
+    const allServices = new Set();
+    Object.values(servicesByGroup).forEach(services => {
+      services.forEach(service => allServices.add(service));
+    });
+    servicesToShow = Array.from(allServices);
+  }
+
+  select.innerHTML = '<option value="">전체 서비스</option>';
+
+  servicesToShow.forEach((service) => {
+    const option = document.createElement("option");
+    option.value = service;
+    option.textContent = service.toUpperCase();
+    select.appendChild(option);
+  });
+
+  // 현재 선택된 값이 유효한지 확인하고 설정
+  if (currentValue && servicesToShow.includes(currentValue)) {
+    select.value = currentValue;
+  } else {
+    select.value = "";
+    currentFilter.service = "";
+  }
+}
+
 // ===== Event Handlers =====
 function handleSearch(e) {
   currentFilter.search = e.target.value;
   loadUrls();
 }
 
-function handleGroupFilter(e) {
+function handleTeamFilter(e) {
   currentFilter.group = e.target.value;
+  // 팀 변경시 서비스 필터 초기화 및 서비스 옵션 업데이트
+  currentFilter.service = "";
+  updateServiceOptions();
+  loadUrls();
+}
+
+function handleServiceFilter(e) {
+  currentFilter.service = e.target.value;
   loadUrls();
 }
 
@@ -472,6 +544,23 @@ function getGroupColor(group) {
 
   // 새로운 그룹: HSL 기반 동적 색상 생성
   const hash = hashString(groupLower);
+  const hue = hash % 360;
+  const saturation = 65;
+  const lightness = 55;
+
+  return {
+    background: `hsla(${hue}, ${saturation}%, ${lightness}%, 0.15)`,
+    color: `hsl(${hue}, ${saturation}%, ${lightness - 15}%)`
+  };
+}
+
+function getServiceColor(service) {
+  if (!service) return { background: "rgba(97, 175, 254, 0.15)", color: "#0ea5e9" };
+
+  const serviceLower = service.toLowerCase().trim();
+
+  // 서비스: HSL 기반 동적 색상 생성 (팀 배지와 동일한 방식)
+  const hash = hashString(serviceLower);
   const hue = hash % 360;
   const saturation = 65;
   const lightness = 55;

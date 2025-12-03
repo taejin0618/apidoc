@@ -2,6 +2,7 @@ const axios = require('axios');
 const ApiUrl = require('../models/ApiUrl');
 const ApiVersion = require('../models/ApiVersion');
 const { analyzeChanges } = require('./diffService');
+const { sendChangeNotification } = require('./slackService');
 
 /**
  * Swagger JSON 다운로드
@@ -176,6 +177,20 @@ const parseAndSaveSwagger = async (urlId) => {
         errorMessage: null,
       });
 
+      // 슬랙 알림 전송 (비동기, 실패해도 버전 업데이트는 정상 진행)
+      sendChangeNotification({
+        ownerEmail: apiUrl.owner,
+        apiName: apiUrl.name,
+        apiUrl: apiUrl.url,
+        apiId: urlId.toString(),
+        versionId: updatedVersion.versionId,
+        changesCount: timestampedChanges.length,
+        summary: updatedVersion.summary,
+        isNewVersion: false,
+      }).catch((error) => {
+        console.error('[Slack] 알림 전송 실패 (무시됨):', error.message);
+      });
+
       return {
         created: false,
         updated: true,
@@ -241,6 +256,23 @@ const parseAndSaveSwagger = async (urlId) => {
         errorMessage: null,
         $inc: { versionCount: 1 },
       });
+
+      // 슬랙 알림 전송 (비동기, 실패해도 버전 생성은 정상 진행)
+      // 변경사항이 있을 때만 알림 전송
+      if (changes.length > 0) {
+        sendChangeNotification({
+          ownerEmail: apiUrl.owner,
+          apiName: apiUrl.name,
+          apiUrl: apiUrl.url,
+          apiId: urlId.toString(),
+          versionId: newVersion.versionId,
+          changesCount: changes.length,
+          summary: newVersion.summary,
+          isNewVersion: true,
+        }).catch((error) => {
+          console.error('[Slack] 알림 전송 실패 (무시됨):', error.message);
+        });
+      }
 
       return {
         created: true,

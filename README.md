@@ -71,7 +71,35 @@ PORT=3000
 MONGODB_URI=mongodb://localhost:27017/api-doc-manager
 LOG_LEVEL=dev
 CORS_ORIGIN=http://localhost:3000
+
+# 슬랙 알림 설정 (선택사항)
+SLACK_ENABLED=false
+SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
+BASE_URL=http://localhost:3000
 ```
+
+### 슬랙 알림 설정
+
+API 변경사항 발생 시 슬랙 개인 DM으로 알림을 받으려면 다음 설정이 필요합니다:
+
+1. **Slack Bot 생성**
+   - [Slack API](https://api.slack.com/apps)에서 새 앱 생성
+   - Bot Token Scopes에 다음 권한 추가:
+     - `users:read.email` (이메일로 사용자 조회)
+     - `chat:write` (메시지 전송)
+     - `im:write` (DM 전송)
+   - Bot Token (xoxb-로 시작) 복사
+
+2. **환경 변수 설정**
+   - `SLACK_ENABLED=true`: 슬랙 알림 활성화
+   - `SLACK_BOT_TOKEN`: 위에서 복사한 Bot Token
+   - `BASE_URL`: 상세 페이지 링크 생성용 기본 URL (프로덕션 도메인)
+
+3. **API 담당자 설정**
+   - API 추가/수정 시 `owner` 필드에 슬랙에 등록된 이메일 주소 입력
+   - 변경사항 발생 시 해당 이메일로 슬랙 사용자를 찾아 개인 DM 전송
+
+**참고**: 슬랙 알림이 실패해도 버전 업데이트는 정상적으로 진행됩니다.
 
 ## 프로젝트 구조
 

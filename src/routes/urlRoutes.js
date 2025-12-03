@@ -84,10 +84,23 @@ router.get('/', async (req, res, next) => {
     // 페이지네이션
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
+    // 정렬 파라미터 처리 (공백으로 구분된 문자열을 객체로 변환)
+    let sortObj = {};
+    if (sort) {
+      const sortFields = sort.split(' ');
+      sortFields.forEach(field => {
+        if (field.startsWith('-')) {
+          sortObj[field.substring(1)] = -1; // 내림차순
+        } else {
+          sortObj[field] = 1; // 오름차순
+        }
+      });
+    }
+
     // 쿼리 실행
     const [urls, total] = await Promise.all([
       ApiUrl.find(filter)
-        .sort(sort)
+        .sort(Object.keys(sortObj).length > 0 ? sortObj : { updatedAt: -1 })
         .skip(skip)
         .limit(parseInt(limit))
         .lean(),
@@ -96,6 +109,16 @@ router.get('/', async (req, res, next) => {
 
     // 그룹 목록 조회
     const groups = await ApiUrl.distinct('group');
+
+    // 서비스 목록 조회
+    const services = await ApiUrl.distinct('service');
+
+    // 팀별 서비스 목록 조회
+    const servicesByGroup = {};
+    for (const team of groups) {
+      const teamServices = await ApiUrl.distinct('service', { group: team });
+      servicesByGroup[team] = teamServices;
+    }
 
     res.json({
       success: true,
@@ -106,6 +129,8 @@ router.get('/', async (req, res, next) => {
         limit: parseInt(limit),
         totalPages: Math.ceil(total / parseInt(limit)),
         groups,
+        services,
+        servicesByGroup,
       },
     });
   } catch (error) {
