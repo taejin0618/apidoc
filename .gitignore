@@ -24,6 +24,8 @@ Thumbs.db
 # Claude Code
 .claude/
 .CLAUDE.md
+CLAUDE.md
+.github/
 # Build
 dist/
 build/
@@ -38,5 +40,4 @@ temp/
 # Playwright MCP screenshots
 .playwright-mcp/
 
-CLAUDE.md
 .cursor/
