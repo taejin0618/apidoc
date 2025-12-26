@@ -10,11 +10,15 @@ from pymongo.errors import DuplicateKeyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.gzip import GZipMiddleware
 
-from app.config import settings
-from app.db import close_db, connect_db
-from app.errors import AppError, create_error_response
-from app.middlewares import RateLimitMiddleware, SecurityHeadersMiddleware
-from app.routes import health, pages, swagger, urls, versions
+from app.common.config import settings
+from app.common.database import close_db, connect_db
+from app.common.errors import AppError, create_error_response
+from app.common.middlewares import RateLimitMiddleware, SecurityHeadersMiddleware
+from app.routes import health
+from app.pages import router as pages_router
+from app.swagger import router as swagger_router
+from app.urls import router as urls_router
+from app.versions import urls_router as versions_urls_router, versions_router
 
 # 로깅 설정
 logging.basicConfig(
@@ -85,11 +89,11 @@ app.mount("/js", StaticFiles(directory=BASE_DIR / "public" / "js"), name="js")
 app.mount("/icons", StaticFiles(directory=BASE_DIR / "public" / "icons"), name="icons")
 
 app.include_router(health.router, prefix="/api")
-app.include_router(swagger.router, prefix="/api", tags=["Swagger"])
-app.include_router(urls.router, prefix="/api/urls")
-app.include_router(versions.urls_router, prefix="/api/urls", tags=["Versions"])
-app.include_router(versions.versions_router, prefix="/api/versions", tags=["Versions"])
-app.include_router(pages.router, tags=["Pages"], include_in_schema=False)
+app.include_router(swagger_router, prefix="/api", tags=["Swagger"])
+app.include_router(urls_router, prefix="/api/urls", tags=["URLs"])
+app.include_router(versions_urls_router, prefix="/api/urls", tags=["Versions"])
+app.include_router(versions_router, prefix="/api/versions", tags=["Versions"])
+app.include_router(pages_router, tags=["Pages"], include_in_schema=False)
 
 
 @app.on_event("startup")

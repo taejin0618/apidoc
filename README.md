@@ -7,72 +7,156 @@
 
 Swagger/OpenAPI 문서를 중앙에서 관리하고 버전별 변경사항을 자동으로 추적하는 시스템입니다.
 
-## 스크린샷
+> Python FastAPI 기반의 현대적인 API 문서 관리 플랫폼입니다. 여러 마이크로서비스의 API 문서를 한 곳에서 관리하고, 변경사항을 자동으로 감지하며, 팀원들에게 실시간 알림을 보낼 수 있습니다.
 
-### 메인 페이지 - API 목록
+---
 
-### API 상세 페이지 - Swagger UI 렌더링
+## 🚀 빠른 시작 (3분 설치!)
 
-## 주요 기능
+### 1단계: 자동 설치 (권장)
 
-- **Swagger 문서 URL 관리**: 여러 API 서비스의 Swagger URL을 등록하고 관리
-- **자동 버전 관리**: Swagger JSON을 자동으로 다운로드하고 버전별로 저장
-- **변경사항 자동 감지**: 이전 버전과 비교하여 추가/삭제/수정된 항목 자동 분석
-- **심각도 분류**: 변경사항을 `low` / `medium` / `high` 수준으로 자동 분류
-- **버전 비교**: 두 버전을 나란히 비교하고 변경된 부분 강조 표시
-- **검색 및 필터링**: API 이름, 그룹별 필터링 지원
+```bash
+# 개발 환경 자동 설정 스크립트 실행
+chmod +x scripts/setup.sh
+./scripts/setup.sh
 
-## 기술 스택
+# 또는 수동 설치
+python3 -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate.bat  # Windows
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+### 2단계: MongoDB 실행
+
+```bash
+# Docker 사용 (권장)
+docker run -d -p 27017:27017 --name mongodb mongo:8
+
+# 또는 로컬 MongoDB 실행
+mongod
+```
+
+### 3단계: 서버 실행
+
+```bash
+uvicorn app.main:app --reload --port 3000
+```
+
+✅ **완료!** http://localhost:3000 에 접속하세요.
+
+---
+
+## ✨ 주요 기능
+
+- **🔗 Swagger 문서 URL 관리**: 여러 API 서비스의 Swagger URL을 등록하고 관리
+- **📊 자동 버전 관리**: Swagger JSON을 자동으로 다운로드하고 버전별로 저장
+- **🔍 변경사항 자동 감지**: 이전 버전과 비교하여 추가/삭제/수정된 항목 자동 분석
+- **⚠️ 심각도 분류**: 변경사항을 `low` / `medium` / `high` 수준으로 자동 분류
+- **📈 버전 비교**: 두 버전을 나란히 비교하고 변경된 부분 강조 표시
+- **🔎 검색 및 필터링**: API 이름, 그룹별 필터링 및 검색 지원
+- **📢 Slack 알림**: API 변경사항 발생 시 담당자에게 즉시 알림 (선택)
+
+---
+
+## 📚 문서
+
+- **[설치 가이드](docs/SETUP.md)** - 상세한 설치 및 설정 방법
+- **[API 가이드](docs/API_GUIDE.md)** - 프론트엔드 개발자용 API 사용법
+- **[아키텍처 설명](docs/ARCHITECTURE.md)** - 프로젝트 구조 및 설계
+
+---
+
+## 🏗️ 프로젝트 구조
+
+```
+app/
+├── common/             # 🛠️ 공통 모듈 (설정, DB, 에러 핸들링)
+│   ├── config.py       # 환경변수 설정
+│   ├── database.py     # MongoDB 연결
+│   ├── dependencies.py # FastAPI 의존성
+│   ├── errors.py       # 에러 처리
+│   ├── utils.py        # 유틸리티 함수
+│   ├── responses.py    # API 응답 스키마
+│   └── middlewares/    # 미들웨어
+│
+├── urls/               # 🔗 URL 관리 모듈
+│   ├── routes.py       # API 엔드포인트
+│   └── schemas.py      # 데이터 스키마
+│
+├── versions/           # 📊 버전 관리 모듈
+│   ├── routes.py       # 버전 조회/비교 API
+│   └── service.py      # Diff 분석 로직
+│
+├── swagger/            # 📄 Swagger 서비스
+│   ├── routes.py       # Swagger API
+│   └── service.py      # Swagger 다운로드/파싱
+│
+├── pages/              # 🌐 HTML 페이지 라우팅
+│   └── routes.py
+│
+└── main.py             # 🚪 FastAPI 진입점
+```
+
+---
+
+## 🔧 기술 스택
 
 | 구분     | 기술                              |
 | -------- | --------------------------------- |
-| Backend  | FastAPI                           |
-| Database | MongoDB (Motor / PyMongo)         |
-| Runtime  | Python 3.10+                      |
-| Frontend | HTML5 / CSS3 / Vanilla JavaScript |
+| 백엔드   | FastAPI                           |
+| 데이터베이스 | MongoDB (Motor / PyMongo)    |
+| 런타임   | Python 3.10+                      |
+| 프론트엔드   | HTML5 / CSS3 / Vanilla JS     |
+| 알림     | Slack SDK (선택)                  |
 
-## 빠른 시작
+---
 
-### 사전 요구사항
+## 🔰 초보자 가이드
 
-- Python 3.10 이상
-- MongoDB 실행 중
+### 새로운 API 엔드포인트 추가하기
 
-### 설치 및 실행
-
-```bash
-# 저장소 클론
-git clone <repository-url>
-cd apidocpython
-
-# 가상환경 생성 및 활성화
-# macOS/Linux:
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Windows (PowerShell):
-# python -m venv .venv
-# .venv\Scripts\Activate.ps1
-
-# Windows (CMD):
-# python -m venv .venv
-# .venv\Scripts\activate.bat
-
-# 의존성 설치
-pip install -r requirements.txt
-
-# 환경 변수 설정
-cp .env.example .env
-# .env 파일을 열어 MONGODB_URI 등 설정
-
-# 개발 서버 실행
-uvicorn app.main:app --reload --host 0.0.0.0 --port 3000
-
-# 브라우저에서 접속
-# http://localhost:3000
+```python
+# app/urls/routes.py 열기
+@router.get("/my-endpoint")
+async def my_endpoint(db: AsyncIOMotorDatabase = Depends(get_db)):
+    """엔드포인트 설명"""
+    data = await db.apiurls.find_one({...})
+    return {"success": True, "data": data}
 ```
 
-**참고**: 가상 환경을 활성화하면 프롬프트 앞에 `(.venv)`가 표시됩니다. 가상 환경을 비활성화하려면 `deactivate` 명령어를 실행하세요.
+### MongoDB 데이터 확인하기
+
+```bash
+# MongoDB Shell 연결
+mongosh
+use api-doc-manager
+db.apiurls.find()       # URL 목록
+db.apiversions.find()   # 버전 목록
+```
+
+### 로그 확인하기
+
+```bash
+# 개발 서버 로그 확인
+uvicorn app.main:app --reload --log-level debug
+```
+
+---
+
+## 🐛 문제 해결
+
+| 문제 | 해결책 |
+|------|--------|
+| **MongoDB 연결 오류** | Docker: `docker ps \| grep mongodb` / 로컬: `ps aux \| grep mongod` |
+| **포트 3000 이미 사용 중** | `uvicorn app.main:app --reload --port 8000` |
+| **가상환경 오류** | `python3 -m venv .venv` 다시 실행 |
+| **의존성 설치 실패** | `pip install --upgrade pip` 후 재설치 |
+
+자세한 내용은 [docs/SETUP.md](docs/SETUP.md)를 참고하세요.
+
+---
 
 ## 환경 변수
 
