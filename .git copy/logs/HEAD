@@ -1,0 +1,9 @@
+0000000000000000000000000000000000000000 bcfc865d7c813dc2fbdf24240b607211e0f2f5b2 태진 <taejin@taejin-ui-Macmini.local> 1765027946 +0900	clone: from https://github.com/taejin0618/apidoc.git
+bcfc865d7c813dc2fbdf24240b607211e0f2f5b2 bcfc865d7c813dc2fbdf24240b607211e0f2f5b2 태진 <taejin@taejin-ui-Macmini.local> 1765027993 +0900	checkout: moving from main to develop
+bcfc865d7c813dc2fbdf24240b607211e0f2f5b2 80a9b84733d381b3ea67c36ecbc9f2b80dbcaaa1 태진 <taejin@taejin-ui-Macmini.local> 1765030844 +0900	commit: docs: 프론트엔드 API 사용 가이드 추가 및 Swagger 문서 개선
+80a9b84733d381b3ea67c36ecbc9f2b80dbcaaa1 bcfc865d7c813dc2fbdf24240b607211e0f2f5b2 태진 <taejin@taejin-ui-Macmini.local> 1765625943 +0900	checkout: moving from develop to main
+bcfc865d7c813dc2fbdf24240b607211e0f2f5b2 80a9b84733d381b3ea67c36ecbc9f2b80dbcaaa1 태진 <taejin@taejin-ui-Macmini.local> 1765625959 +0900	checkout: moving from main to develop
+80a9b84733d381b3ea67c36ecbc9f2b80dbcaaa1 9e46ebda8a099f9f79252085ac67f6bad3cffe4f 태진 <taejin0618@users.noreply.github.com> 1766406521 +0900	pull --tags origin develop: Fast-forward
+9e46ebda8a099f9f79252085ac67f6bad3cffe4f a997e621273562336d75cf4b067c338325a4071d 태진 <taejin0618@users.noreply.github.com> 1766725295 +0900	commit: chore: Remove Node.js legacy files and clean up configuration
+a997e621273562336d75cf4b067c338325a4071d 20ac17c841560f2f3126d67bd300f513de255c23 태진 <taejin0618@users.noreply.github.com> 1766726738 +0900	commit: fix: Update import paths in common module for refactored structure
+20ac17c841560f2f3126d67bd300f513de255c23 77643c587b24d53b1ae33da069ab814699e533f0 태진 <taejin0618@users.noreply.github.com> 1766726898 +0900	commit: docs: Add comprehensive refactoring summary
