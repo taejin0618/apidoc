@@ -10,13 +10,13 @@
 여러 곳에 흩어져 있는 API 문서를 하나의 페이지에서 통합 관리하고, 문서의 변경 이력을 체계적으로 추적하여 개발 생산성과 협업 효율성을 높이기 위해 만들어졌습니다.
 
 ### 💻 주요 기술 스택 (Tech Stack)
--   **Backend:** Node.js, Express.js
+-   **Backend:** Python, FastAPI
 -   **Database:** MongoDB
 -   **Frontend:** HTML, CSS, JavaScript (Vanilla)
 -   **기타:**
-    -   `json-diff`: API 버전 간의 차이점 비교
-    -   `axios`: Swagger/OpenAPI 데이터 요청
-    -   `helmet`, `cors`, `morgan`: 보안 및 서버 로깅
+    -   `deepdiff`: API 버전 간의 차이점 비교
+    -   `httpx`: Swagger/OpenAPI 데이터 요청
+    -   `GZip`, `CORS`: 응답 압축 및 CORS 처리
 
 ---
 

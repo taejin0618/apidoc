@@ -1,8 +1,8 @@
 # API Doc Manager (ADM)
 
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.x-green.svg)](https://www.mongodb.com/)
-[![Express](https://img.shields.io/badge/Express-4.18.x-blue.svg)](https://expressjs.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-teal.svg)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/License-ISC-yellow.svg)](LICENSE)
 
 Swagger/OpenAPI 문서를 중앙에서 관리하고 버전별 변경사항을 자동으로 추적하는 시스템입니다.
@@ -11,9 +11,7 @@ Swagger/OpenAPI 문서를 중앙에서 관리하고 버전별 변경사항을 �
 
 ### 메인 페이지 - API 목록
 
-
 ### API 상세 페이지 - Swagger UI 렌더링
-
 
 ## 주요 기능
 
@@ -26,18 +24,18 @@ Swagger/OpenAPI 문서를 중앙에서 관리하고 버전별 변경사항을 �
 
 ## 기술 스택
 
-| 구분 | 기술 |
-|------|------|
-| Backend | Express.js 4.18.x |
-| Database | MongoDB (Mongoose 8.x) |
-| Runtime | Node.js 18.x |
+| 구분     | 기술                              |
+| -------- | --------------------------------- |
+| Backend  | FastAPI                           |
+| Database | MongoDB (Motor / PyMongo)         |
+| Runtime  | Python 3.10+                      |
 | Frontend | HTML5 / CSS3 / Vanilla JavaScript |
 
 ## 빠른 시작
 
 ### 사전 요구사항
 
-- Node.js 18.x 이상
+- Python 3.10 이상
 - MongoDB 실행 중
 
 ### 설치 및 실행
@@ -45,21 +43,36 @@ Swagger/OpenAPI 문서를 중앙에서 관리하고 버전별 변경사항을 �
 ```bash
 # 저장소 클론
 git clone <repository-url>
-cd apidoc
+cd apidocpython
+
+# 가상환경 생성 및 활성화
+# macOS/Linux:
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Windows (PowerShell):
+# python -m venv .venv
+# .venv\Scripts\Activate.ps1
+
+# Windows (CMD):
+# python -m venv .venv
+# .venv\Scripts\activate.bat
 
 # 의존성 설치
-npm install
+pip install -r requirements.txt
 
 # 환경 변수 설정
 cp .env.example .env
 # .env 파일을 열어 MONGODB_URI 등 설정
 
 # 개발 서버 실행
-npm run dev
+uvicorn app.main:app --reload --host 0.0.0.0 --port 3000
 
 # 브라우저에서 접속
 # http://localhost:3000
 ```
+
+**참고**: 가상 환경을 활성화하면 프롬프트 앞에 `(.venv)`가 표시됩니다. 가상 환경을 비활성화하려면 `deactivate` 명령어를 실행하세요.
 
 ## 환경 변수
 
@@ -71,6 +84,7 @@ PORT=3000
 MONGODB_URI=mongodb://localhost:27017/api-doc-manager
 LOG_LEVEL=dev
 CORS_ORIGIN=http://localhost:3000
+TRUST_PROXY=1
 
 # 슬랙 알림 설정 (선택사항)
 SLACK_ENABLED=false
@@ -78,11 +92,14 @@ SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
 BASE_URL=http://localhost:3000
 ```
 
+**참고**: `NODE_ENV`는 레거시 호환성을 위해 유지되지만, 실제로는 Python 환경에서 사용되지 않습니다.
+
 ### 슬랙 알림 설정
 
 API 변경사항 발생 시 슬랙 개인 DM으로 알림을 받으려면 다음 설정이 필요합니다:
 
 1. **Slack Bot 생성**
+
    - [Slack API](https://api.slack.com/apps)에서 새 앱 생성
    - Bot Token Scopes에 다음 권한 추가:
      - `users:read.email` (이메일로 사용자 조회)
@@ -91,6 +108,7 @@ API 변경사항 발생 시 슬랙 개인 DM으로 알림을 받으려면 다음
    - Bot Token (xoxb-로 시작) 복사
 
 2. **환경 변수 설정**
+
    - `SLACK_ENABLED=true`: 슬랙 알림 활성화
    - `SLACK_BOT_TOKEN`: 위에서 복사한 Bot Token
    - `BASE_URL`: 상세 페이지 링크 생성용 기본 URL (프로덕션 도메인)
@@ -104,27 +122,15 @@ API 변경사항 발생 시 슬랙 개인 DM으로 알림을 받으려면 다음
 ## 프로젝트 구조
 
 ```
-apidoc/
-├── server.js                 # Express 앱 진입점
-├── package.json              # 프로젝트 메타데이터
-├── .env                      # 환경 변수
-│
-├── src/                      # 소스 코드
-│   ├── app.js                # Express 앱 설정
-│   ├── config/
-│   │   └── database.js       # MongoDB 연결 설정
-│   ├── models/               # Mongoose 스키마
-│   │   ├── ApiUrl.js         # API URL 등록 정보
-│   │   ├── ApiVersion.js     # 버전 히스토리
-│   │   └── AuditLog.js       # 감사 로그
-│   ├── routes/               # API 라우트
-│   │   ├── urlRoutes.js      # URL CRUD 엔드포인트
-│   │   └── versionRoutes.js  # 버전 관리 엔드포인트
+apidocpython/
+├── app/                      # FastAPI 앱
+│   ├── main.py               # 앱 진입점
+│   ├── db.py                 # MongoDB 연결
+│   ├── routes/               # API/페이지 라우트
 │   ├── services/             # 비즈니스 로직
-│   │   ├── swaggerService.js # Swagger JSON 파싱 및 저장
-│   │   └── diffService.js    # JSON 비교 및 변경사항 분석
-│   └── middlewares/
-│       └── errorHandler.js   # 전역 에러 처리
+│   └── swagger_spec.json     # OpenAPI 스펙 (정적)
+├── requirements.txt          # Python 의존성
+├── .env                      # 환경 변수
 │
 ├── views/                    # HTML 페이지
 │   ├── index.html            # 메인 페이지 (API 목록)
@@ -135,8 +141,7 @@ apidoc/
 │   ├── css/                  # 스타일시트
 │   └── js/                   # 클라이언트 JavaScript
 │
-├── scripts/                  # 유틸리티 스크립트
-│   └── seed-sample-version.js # 테스트 데이터 생성
+├── scripts/                  # 유틸리티 스크립트 (Node.js 기반 마이그레이션 스크립트)
 │
 └── examples/                 # 예제 Swagger JSON
     ├── swagger-v1.json
@@ -148,48 +153,40 @@ apidoc/
 
 ### URL 관리
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| `GET` | `/api/urls` | 모든 URL 목록 조회 |
-| `POST` | `/api/urls` | 새 URL 등록 |
-| `GET` | `/api/urls/:id` | 특정 URL 상세 조회 |
-| `PUT` | `/api/urls/:id` | URL 정보 수정 |
-| `DELETE` | `/api/urls/:id` | URL 삭제 |
-| `PATCH` | `/api/urls/:id/activate` | 활성화/비활성화 토글 |
-| `POST` | `/api/urls/:id/fetch` | Swagger JSON 수동 업데이트 |
+| Method   | Endpoint                 | 설명                       |
+| -------- | ------------------------ | -------------------------- |
+| `GET`    | `/api/urls`              | 모든 URL 목록 조회         |
+| `POST`   | `/api/urls`              | 새 URL 등록                |
+| `GET`    | `/api/urls/:id`          | 특정 URL 상세 조회         |
+| `PUT`    | `/api/urls/:id`          | URL 정보 수정              |
+| `DELETE` | `/api/urls/:id`          | URL 삭제                   |
+| `PATCH`  | `/api/urls/:id/activate` | 활성화/비활성화 토글       |
+| `POST`   | `/api/urls/:id/fetch`    | Swagger JSON 수동 업데이트 |
 
 ### 버전 관리
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| `GET` | `/api/urls/:id/versions` | 버전 목록 조회 |
-| `GET` | `/api/urls/:id/versions/:versionId` | 버전 상세 조회 |
-| `GET` | `/api/urls/:id/versions/:v1/compare/:v2` | 두 버전 비교 |
-| `GET` | `/api/versions/latest/:count` | 최신 N개 버전 조회 |
+| Method | Endpoint                                 | 설명               |
+| ------ | ---------------------------------------- | ------------------ |
+| `GET`  | `/api/urls/:id/versions`                 | 버전 목록 조회     |
+| `GET`  | `/api/urls/:id/versions/:versionId`      | 버전 상세 조회     |
+| `GET`  | `/api/urls/:id/versions/:v1/compare/:v2` | 두 버전 비교       |
+| `GET`  | `/api/versions/latest/:count`            | 최신 N개 버전 조회 |
 
 ### 헬스체크
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| `GET` | `/api/health` | 서버 상태 확인 |
+| Method | Endpoint      | 설명           |
+| ------ | ------------- | -------------- |
+| `GET`  | `/api/health` | 서버 상태 확인 |
 
 ## 개발 스크립트
 
 ```bash
 # 개발 서버 (자동 재시작)
-npm run dev
+uvicorn app.main:app --reload --host 0.0.0.0 --port 3000
 
 # 프로덕션 서버
-npm start
+uvicorn app.main:app --host 0.0.0.0 --port 3000
 
-# ESLint 검사
-npm run lint
-
-# Prettier 포맷팅
-npm run format
-
-# 테스트 데이터 생성
-node scripts/seed-sample-version.js
 ```
 
 ## 개발 워크플로우
@@ -218,34 +215,29 @@ git checkout -b feature/기능명
 
 ## 변경사항 심각도
 
-| 심각도 | 기준 | 예시 |
-|--------|------|------|
-| **high** | 새 endpoint 추가, 필수 파라미터 변경 | path 추가, required=true 파라미터 |
-| **medium** | 선택 파라미터 변경, RequestBody 수정 | optional 파라미터, schema 변경 |
-| **low** | 설명 변경, 메타정보 수정 | description, summary 변경 |
+| 심각도     | 기준                                 | 예시                              |
+| ---------- | ------------------------------------ | --------------------------------- |
+| **high**   | 새 endpoint 추가, 필수 파라미터 변경 | path 추가, required=true 파라미터 |
+| **medium** | 선택 파라미터 변경, RequestBody 수정 | optional 파라미터, schema 변경    |
+| **low**    | 설명 변경, 메타정보 수정             | description, summary 변경         |
 
 ## 의존성
 
 ### 프로덕션
 
-| 패키지 | 용도 |
-|--------|------|
-| express | 웹 프레임워크 |
-| mongoose | MongoDB ODM |
-| axios | HTTP 클라이언트 |
-| json-diff | JSON 비교 |
-| cors | CORS 처리 |
-| dotenv | 환경 변수 |
-| morgan | HTTP 로깅 |
-| joi | 입력 검증 |
+| 패키지          | 용도                    |
+| --------------- | ----------------------- |
+| fastapi         | 웹 프레임워크           |
+| uvicorn         | ASGI 서버               |
+| motor           | MongoDB 비동기 드라이버 |
+| pymongo         | MongoDB 동기 드라이버   |
+| httpx           | HTTP 클라이언트         |
+| deepdiff        | JSON 비교               |
+| python-dotenv   | 환경 변수 관리          |
+| slack-sdk       | 슬랙 알림               |
+| email-validator | 이메일 검증             |
 
-### 개발
-
-| 패키지 | 용도 |
-|--------|------|
-| nodemon | 자동 재시작 |
-| eslint | 코드 검사 |
-| prettier | 코드 포맷팅 |
+자세한 내용은 `requirements.txt`를 참고하세요.
 
 ## 라이선스
 
