@@ -4,12 +4,12 @@
 services:
   - type: web
     name: api-doc-manager
-    runtime: node
+    runtime: python
     plan: free
 
     # 빌드 설정
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
     # 헬스체크
     healthCheckPath: /api/health
